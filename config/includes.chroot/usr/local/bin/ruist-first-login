@@ -1,0 +1,25 @@
+#!/bin/sh
+# ruist-first-login - se ejecuta una vez por usuario al entrar al escritorio.
+# Pone el fondo de pantalla de Ruist OS en todos los monitores.
+
+MARCA="$HOME/.config/ruist/first-login-done"
+FONDO="/usr/share/backgrounds/ruist/ruist-default.png"
+
+[ -f "$MARCA" ] && exit 0
+[ -f "$FONDO" ] || exit 0
+
+# Espera a que xfdesktop esté listo
+sleep 3
+
+# Nombres de los monitores conectados (más "0", que usan algunas versiones)
+MONITORES="0 $(xrandr --listmonitors 2>/dev/null | awk 'NR>1 {print $NF}')"
+
+for m in $MONITORES; do
+    base="/backdrop/screen0/monitor$m/workspace0"
+    xfconf-query -c xfce4-desktop -p "$base/last-image" -n -t string -s "$FONDO"
+    xfconf-query -c xfce4-desktop -p "$base/image-style" -n -t int -s 5
+    xfconf-query -c xfce4-desktop -p "$base/color-style" -n -t int -s 0
+done
+
+mkdir -p "$(dirname "$MARCA")"
+touch "$MARCA"

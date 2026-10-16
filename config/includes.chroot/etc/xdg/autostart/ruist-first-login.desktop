@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Ruist OS primer inicio
+Exec=/usr/local/bin/ruist-first-login
+OnlyShowIn=XFCE;
+NoDisplay=true

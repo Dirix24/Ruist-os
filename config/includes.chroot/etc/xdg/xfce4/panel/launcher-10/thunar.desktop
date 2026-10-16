@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Gestor de archivos
+Comment=Explorar archivos
+Exec=thunar %U
+Icon=system-file-manager
+Terminal=false
+Categories=System;FileManager;

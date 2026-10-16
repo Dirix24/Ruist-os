@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Brave
+Comment=Navegador web
+Exec=brave-browser %U
+Icon=brave-browser
+Terminal=false
+Categories=Network;WebBrowser;

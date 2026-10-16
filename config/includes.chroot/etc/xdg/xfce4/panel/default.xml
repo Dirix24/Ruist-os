@@ -4,7 +4,10 @@
   <property name="configver" type="int" value="2"/>
   <property name="panels" type="array">
     <value type="int" value="1"/>
+    <value type="int" value="2"/>
     <property name="dark-mode" type="bool" value="true"/>
+
+    <!-- Panel superior: menú a la izquierda, reloj en el centro, bandeja a la derecha -->
     <property name="panel-1" type="empty">
       <property name="position" type="string" value="p=6;x=0;y=0"/>
       <property name="position-locked" type="bool" value="true"/>
@@ -12,6 +15,13 @@
       <property name="size" type="uint" value="28"/>
       <property name="nrows" type="uint" value="1"/>
       <property name="mode" type="uint" value="0"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0.45"/>
+      </property>
       <property name="plugin-ids" type="array">
         <value type="int" value="1"/>
         <value type="int" value="2"/>
@@ -20,26 +30,67 @@
         <value type="int" value="5"/>
         <value type="int" value="6"/>
         <value type="int" value="7"/>
-        <value type="int" value="8"/>
+      </property>
+    </property>
+
+    <!-- Dock inferior: solo iconos, centrado -->
+    <property name="panel-2" type="empty">
+      <property name="position" type="string" value="p=10;x=0;y=0"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="length" type="uint" value="30"/>
+      <property name="length-adjust" type="bool" value="true"/>
+      <property name="size" type="uint" value="44"/>
+      <property name="icon-size" type="uint" value="32"/>
+      <property name="nrows" type="uint" value="1"/>
+      <property name="mode" type="uint" value="0"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0"/>
+        <value type="double" value="0.45"/>
+      </property>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="10"/>
+        <value type="int" value="11"/>
       </property>
     </property>
   </property>
+
   <property name="plugins" type="empty">
     <property name="plugin-1" type="string" value="whiskermenu"/>
-    <property name="plugin-2" type="string" value="tasklist">
-      <property name="show-labels" type="bool" value="true"/>
-      <property name="grouping" type="uint" value="1"/>
-    </property>
-    <property name="plugin-3" type="string" value="separator">
+    <property name="plugin-2" type="string" value="separator">
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
     </property>
-    <property name="plugin-4" type="string" value="systemload"/>
-    <property name="plugin-5" type="string" value="systray"/>
+    <property name="plugin-3" type="string" value="clock">
+      <property name="mode" type="uint" value="2"/>
+      <property name="digital-layout" type="uint" value="2"/>
+      <property name="digital-date-format" type="string" value="%Y-%m-%d"/>
+      <property name="digital-time-format" type="string" value="%H:%M"/>
+    </property>
+    <property name="plugin-4" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-5" type="string" value="systray">
+      <property name="square-icons" type="bool" value="true"/>
+    </property>
     <property name="plugin-6" type="string" value="pulseaudio"/>
     <property name="plugin-7" type="string" value="power-manager-plugin"/>
-    <property name="plugin-8" type="string" value="clock">
-      <property name="digital-format" type="string" value="%H:%M"/>
+
+    <property name="plugin-10" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="brave-browser.desktop"/>
+        <value type="string" value="xfce4-terminal.desktop"/>
+        <value type="string" value="thunar.desktop"/>
+        <value type="string" value="ruist-software.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-11" type="string" value="tasklist">
+      <property name="show-labels" type="bool" value="false"/>
+      <property name="grouping" type="uint" value="1"/>
+      <property name="flat-buttons" type="bool" value="true"/>
     </property>
   </property>
 </channel>
