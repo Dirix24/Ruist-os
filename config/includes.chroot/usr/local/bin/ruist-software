@@ -47,7 +47,8 @@ menu_apt() {
         FALSE krita        "Krita (pintura digital)" \
         FALSE kdenlive     "Kdenlive (edición de vídeo)" \
         FALSE libreoffice  "LibreOffice (ofimática)" \
-        FALSE lutris       "Lutris (gestor de juegos)" 2>/dev/null) || return
+        FALSE lutris       "Lutris (gestor de juegos)" \
+        FALSE simplescreenrecorder "SimpleScreenRecorder (grabar pantalla)" 2>/dev/null) || return
     [ -n "$SEL" ] && terminal "pkexec /usr/local/bin/ruist-software apt $SEL"
 }
 
@@ -59,6 +60,8 @@ menu_flathub() {
         FALSE com.heroicgameslauncher.hgl      "Heroic (Epic, GOG y Amazon Games)" \
         FALSE com.usebottles.bottles           "Bottles (Wine sin complicaciones)" \
         FALSE net.davidotek.pupgui2            "ProtonUp-Qt (versiones de Proton)" \
+        FALSE org.vinegarhq.Sober              "Sober (Roblox en Linux)" \
+        FALSE org.vinegarhq.Vinegar            "Vinegar (Roblox Studio en Linux)" \
         FALSE com.discordapp.Discord           "Discord" \
         FALSE com.spotify.Client               "Spotify" \
         FALSE com.visualstudio.code            "Visual Studio Code" \

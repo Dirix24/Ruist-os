@@ -36,6 +36,9 @@ config/
 tools/
   check-config.sh       Comprueba sintaxis, XML y JSON (sin red)
   check-packages.sh     Comprueba que todos los paquetes existen en trixie
+  make-wallpaper.py     Genera el fondo de pantalla (formas geométricas azules)
+branding/
+  ruist-logo.png        Logo de Ruist OS (original de 512x512)
 .github/workflows/
   build-iso.yml         Compila la ISO en GitHub Actions
 ```
