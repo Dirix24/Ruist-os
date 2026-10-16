@@ -40,6 +40,10 @@ jobs:
       image: debian:trixie
       options: --privileged
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Instalar herramientas de compilación
         run: |
@@ -48,12 +52,42 @@ jobs:
             live-build debootstrap squashfs-tools xorriso mtools dosfstools \
             grub-pc-bin grub-efi-amd64-bin grub-efi-amd64-signed shim-signed \
             syslinux syslinux-common isolinux \
-            git ca-certificates curl gnupg
+            git ca-certificates curl gnupg python3
 
+      # Este job corre en una máquina distinta a "check": hace su propio checkout,
+      # así que config/ ya está aquí y no hace falta pasarla como artefacto.
       - uses: actions/checkout@v4
 
+      - name: Verificar que config/ existe y está completa
+        run: |
+          test -d config || { echo "ERROR: no existe el directorio config/"; exit 1; }
+          for f in common bootstrap chroot binary source; do
+            test -f "config/$f" || { echo "ERROR: falta config/$f"; exit 1; }
+          done
+          test -d config/package-lists || { echo "ERROR: falta config/package-lists"; exit 1; }
+          lb --version
+          ls -la config
+          tools/check-config.sh
+
+      - name: Limpiar residuos de compilaciones anteriores
+        run: |
+          # No se usa "lb clean --purge": también borra los archivos de config/
+          # (common, bootstrap, chroot, binary, source) que están versionados en este repo.
+          rm -rf .build chroot binary cache stage
+          rm -f live-image-* *.iso
+
+      - name: Marcar la etapa "config" como hecha
+        run: |
+          # "lb build" exige .build/config, que solo crea "lb config". Como la
+          # configuración ya está escrita a mano en config/, se crea el marcador
+          # sin ejecutar "lb config" (que reescribiría esos archivos).
+          mkdir -p .build
+          touch .build/config
+
       - name: Compilar la ISO
-        run: lb build
+        run: |
+          set -o pipefail
+          lb build 2>&1 | tee build.log
 
       - name: Preparar el archivo final
         run: |
@@ -72,3 +106,12 @@ jobs:
             ruist-os-*.sha256
           retention-days: 14
           compression-level: 0
+
+      - name: Subir el registro de la compilación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruist-os-build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
