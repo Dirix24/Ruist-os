@@ -1,0 +1,57 @@
+#!/bin/sh
+# ruist-drivers - gestor de drivers NVIDIA (equivalente al de MX Linux)
+# Sin argumentos: abre la interfaz gráfica.
+# Con "instalar PAQUETE" o "quitar": hace el trabajo como root.
+
+if [ "$(id -u)" -eq 0 ] && [ -n "$1" ]; then
+    export DEBIAN_FRONTEND=noninteractive
+    case "$1" in
+        instalar)
+            apt-get update
+            apt-get install -y linux-headers-amd64 dkms firmware-misc-nonfree "$2"
+            echo
+            echo "Listo. Reinicia el equipo para usar el driver NVIDIA." ;;
+        quitar)
+            apt-get purge -y '^nvidia-.*' 'libnvidia-.*' 'xserver-xorg-video-nvidia.*' || true
+            apt-get autoremove -y
+            echo
+            echo "Driver NVIDIA eliminado. Reinicia para volver al driver libre (nouveau)." ;;
+    esac
+    exit 0
+fi
+
+if ! command -v nvidia-detect >/dev/null 2>&1; then
+    zenity --error --text="Falta la herramienta nvidia-detect." 2>/dev/null
+    exit 1
+fi
+
+INFORME=$(nvidia-detect 2>&1)
+PAQUETE=$(echo "$INFORME" | grep -o 'nvidia-[a-z0-9.-]*driver' | head -1)
+ACTUAL=$(dpkg -l 2>/dev/null | awk '/^ii +nvidia-[a-z0-9.-]*driver /{print $2; exit}')
+
+if ! echo "$INFORME" | grep -qi 'detected nvidia'; then
+    zenity --info --title="Drivers NVIDIA" --width=400 \
+        --text="No se ha detectado ninguna tarjeta NVIDIA en este equipo." 2>/dev/null
+    exit 0
+fi
+
+TEXTO="$INFORME
+
+Driver instalado: ${ACTUAL:-ninguno (se usa el libre, nouveau)}
+Driver recomendado: ${PAQUETE:-ninguno disponible en Debian para esta tarjeta}"
+
+ACCION=$(zenity --list --title="Drivers NVIDIA" --width=560 --height=420 \
+    --text="$TEXTO" --hide-header --column="id" --column="Acción" --hide-column=1 \
+    instalar "Instalar el driver recomendado" \
+    quitar   "Quitar el driver NVIDIA y volver a nouveau" 2>/dev/null) || exit 0
+
+case "$ACCION" in
+    instalar)
+        if [ -z "$PAQUETE" ]; then
+            zenity --warning --width=420 --text="Debian no ofrece un driver propietario para esta tarjeta. Se seguirá usando nouveau." 2>/dev/null
+            exit 0
+        fi
+        xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-drivers instalar $PAQUETE" ;;
+    quitar)
+        xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-drivers quitar" ;;
+esac

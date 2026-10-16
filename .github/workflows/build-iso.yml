@@ -1,0 +1,48 @@
+name: Compilar ISO de Ruist OS
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Cada domingo, para que la ISO salga siempre con paquetes recientes
+    - cron: "0 3 * * 0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    container:
+      image: debian:trixie
+      options: --privileged
+
+    steps:
+      - name: Instalar herramientas de compilación
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            live-build debootstrap squashfs-tools xorriso mtools dosfstools \
+            grub-pc-bin grub-efi-amd64-bin grub-efi-amd64-signed shim-signed \
+            syslinux syslinux-common isolinux \
+            git ca-certificates curl gnupg
+
+      - uses: actions/checkout@v4
+
+      - name: Compilar la ISO
+        run: lb build
+
+      - name: Preparar el archivo final
+        run: |
+          ISO=$(ls -1 *.iso | head -n1)
+          FECHA=$(date +%Y%m%d)
+          mv "$ISO" "ruist-os-$FECHA-amd64.iso"
+          sha256sum "ruist-os-$FECHA-amd64.iso" > "ruist-os-$FECHA-amd64.iso.sha256"
+          ls -lh ruist-os-*
+
+      - name: Subir la ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruist-os-iso
+          path: |
+            ruist-os-*.iso
+            ruist-os-*.sha256
+          retention-days: 14
+          compression-level: 0

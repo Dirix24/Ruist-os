@@ -4,3 +4,6 @@ libglx-mesa0
 mesa-utils
 vulkan-tools
 vulkan-validationlayers
+
+# Gestor de drivers NVIDIA
+nvidia-detect

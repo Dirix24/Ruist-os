@@ -7,6 +7,7 @@ while true; do
         --column="id" --column="Acción" --hide-column=1 \
         actualizar "Actualizar el sistema" \
         software   "Instalar software" \
+        drivers    "Drivers de vídeo (NVIDIA)" \
         rendimiento "Modo de rendimiento" \
         limpiar    "Limpiar el sistema" \
         info       "Información del sistema" 2>/dev/null) || exit 0
@@ -16,6 +17,8 @@ while true; do
             xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-update" ;;
         software)
             ruist-software ;;
+        drivers)
+            ruist-drivers ;;
         rendimiento)
             MODO=$(zenity --list --title="Modo de rendimiento" --width=360 --height=260 \
                 --text="$(ruist-perf estado)" --hide-header \

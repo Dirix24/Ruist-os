@@ -1,0 +1,12 @@
+#!/bin/bash
+# Reduce el consumo de memoria en reposo desactivando servicios que casi nadie usa.
+# Se puede reactivar con: sudo systemctl enable --now ModemManager
+set -e
+
+systemctl disable ModemManager.service 2>/dev/null || true
+
+# Con zram no hace falta zswap
+mkdir -p /etc/default/grub.d
+cat > /etc/default/grub.d/10-ruist.cfg <<'CONF'
+GRUB_CMDLINE_LINUX_DEFAULT="quiet zswap.enabled=0"
+CONF

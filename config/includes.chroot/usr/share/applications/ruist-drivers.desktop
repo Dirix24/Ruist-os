@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Drivers NVIDIA
+Comment=Detecta e instala el driver de tu tarjeta NVIDIA
+Exec=/usr/local/bin/ruist-drivers
+Icon=video-display
+Terminal=false
+Categories=Settings;System;
