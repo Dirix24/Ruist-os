@@ -6,8 +6,8 @@ while true; do
         --text="¿Qué quieres hacer?" --hide-header \
         --column="id" --column="Acción" --hide-column=1 \
         actualizar "Actualizar el sistema" \
-        software   "Instalar software" \
-        drivers    "Drivers de vídeo (NVIDIA)" \
+        software   "Tienda de programas" \
+        drivers    "Drivers y componentes (NVIDIA, Wi-Fi...)" \
         rendimiento "Modo de rendimiento" \
         limpiar    "Limpiar el sistema" \
         info       "Información del sistema" 2>/dev/null) || exit 0

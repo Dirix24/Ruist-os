@@ -1,8 +1,14 @@
 #!/bin/sh
-# ruist-software - instalador de software curado (equivalente a MX Package Installer)
+# ruist-software - tienda de programas de Ruist OS
+# (equivalente a MX Package Installer + una tienda de Flathub)
+#
+# Sin argumentos abre el menú gráfico.
+# Como root, "apt PAQUETE..." instala paquetes de Debian ("steam" configura i386).
 
-if [ "$(id -u)" -eq 0 ]; then
-    # Modo root: instala lo que se le pasa como argumentos
+FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
+
+if [ "$(id -u)" -eq 0 ] && [ "$1" = "apt" ]; then
+    shift
     for item in "$@"; do
         case "$item" in
             steam)
@@ -15,21 +21,82 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 0
 fi
 
-SELECCION=$(zenity --list --checklist --title="Instalar software" --width=480 --height=460 \
-    --text="Marca lo que quieras instalar" \
-    --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
-    FALSE steam        "Steam (juegos)" \
-    FALSE wine         "Wine (programas de Windows)" \
-    FALSE obs-studio   "OBS Studio (grabación y streaming)" \
-    FALSE vlc          "VLC (reproductor de vídeo)" \
-    FALSE audacity     "Audacity (audio)" \
-    FALSE krita        "Krita (pintura digital)" \
-    FALSE kdenlive     "Kdenlive (edición de vídeo)" \
-    FALSE godot3       "Godot (motor de videojuegos, si está en el repositorio)" \
-    FALSE libreoffice  "LibreOffice (ofimática)" \
-    FALSE flatpak      "Flatpak (tiendas de aplicaciones extra)" 2>/dev/null) || exit 0
+# Instalar un Flatpak de Flathub para el usuario (sin pedir contraseña)
+if [ "$1" = "flatpak" ]; then
+    shift
+    flatpak remote-add --user --if-not-exists flathub "$FLATHUB_URL"
+    for id in "$@"; do
+        flatpak install --user -y flathub "$id"
+    done
+    exit 0
+fi
 
-[ -z "$SELECCION" ] && exit 0
+terminal() {
+    xfce4-terminal --hold -e "$1"
+}
 
-# shellcheck disable=SC2086
-xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-software $SELECCION"
+menu_apt() {
+    SEL=$(zenity --list --checklist --title="Programas de Debian" --width=500 --height=480 \
+        --text="Marca lo que quieras instalar" \
+        --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
+        FALSE steam        "Steam (juegos)" \
+        FALSE wine         "Wine (programas de Windows)" \
+        FALSE obs-studio   "OBS Studio (grabación y streaming)" \
+        FALSE vlc          "VLC (reproductor de vídeo)" \
+        FALSE audacity     "Audacity (audio)" \
+        FALSE krita        "Krita (pintura digital)" \
+        FALSE kdenlive     "Kdenlive (edición de vídeo)" \
+        FALSE libreoffice  "LibreOffice (ofimática)" \
+        FALSE lutris       "Lutris (gestor de juegos)" 2>/dev/null) || return
+    [ -n "$SEL" ] && terminal "pkexec /usr/local/bin/ruist-software apt $SEL"
+}
+
+menu_flathub() {
+    SEL=$(zenity --list --checklist --title="Tienda Flathub" --width=560 --height=520 \
+        --text="Programas de Flathub (se instalan solo para tu usuario)" \
+        --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
+        FALSE com.valvesoftware.Steam          "Steam" \
+        FALSE com.heroicgameslauncher.hgl      "Heroic (Epic, GOG y Amazon Games)" \
+        FALSE com.usebottles.bottles           "Bottles (Wine sin complicaciones)" \
+        FALSE net.davidotek.pupgui2            "ProtonUp-Qt (versiones de Proton)" \
+        FALSE com.discordapp.Discord           "Discord" \
+        FALSE com.spotify.Client               "Spotify" \
+        FALSE com.visualstudio.code            "Visual Studio Code" \
+        FALSE org.godotengine.Godot            "Godot (motor de videojuegos)" \
+        FALSE org.blender.Blender              "Blender (última versión)" \
+        FALSE com.obsproject.Studio            "OBS Studio" 2>/dev/null) || return
+    [ -n "$SEL" ] && terminal "/usr/local/bin/ruist-software flatpak $SEL"
+}
+
+menu_buscar() {
+    TEXTO=$(zenity --entry --title="Buscar en Flathub" --text="¿Qué programa buscas?" 2>/dev/null) || return
+    [ -z "$TEXTO" ] && return
+    flatpak remote-add --user --if-not-exists flathub "$FLATHUB_URL" 2>/dev/null
+    RES=$(flatpak search --columns=application,name,description "$TEXTO" 2>/dev/null | head -30)
+    if [ -z "$RES" ]; then
+        zenity --info --text="No se ha encontrado nada para «$TEXTO»." 2>/dev/null
+        return
+    fi
+    SEL=$(echo "$RES" | awk -F'\t' '{print "FALSE\n"$1"\n"$2"\n"$3}' | \
+        zenity --list --checklist --title="Resultados" --width=700 --height=480 \
+        --column="" --column="id" --column="Programa" --column="Descripción" \
+        --hide-column=2 --separator=" " 2>/dev/null) || return
+    [ -n "$SEL" ] && terminal "/usr/local/bin/ruist-software flatpak $SEL"
+}
+
+while true; do
+    OPCION=$(zenity --list --title="Tienda de Ruist OS" --width=440 --height=360 \
+        --text="Instalar programas" --hide-header \
+        --column="id" --column="Origen" --hide-column=1 \
+        flathub "Tienda Flathub (programas populares)" \
+        buscar  "Buscar en Flathub" \
+        apt     "Programas de Debian (rápidos y ligeros)" \
+        synaptic "Catálogo completo de Debian (Synaptic)" 2>/dev/null) || exit 0
+
+    case "$OPCION" in
+        flathub)  menu_flathub ;;
+        buscar)   menu_buscar ;;
+        apt)      menu_apt ;;
+        synaptic) pkexec synaptic ;;
+    esac
+done
