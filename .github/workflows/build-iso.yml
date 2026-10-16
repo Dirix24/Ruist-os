@@ -7,7 +7,33 @@ on:
     - cron: "0 3 * * 0"
 
 jobs:
+  check:
+    # Falla en un minuto si hay un paquete inexistente o un error de sintaxis,
+    # en vez de descubrirlo tras media hora de compilación.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: debian:trixie
+
+    steps:
+      - name: Instalar herramientas
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates python3
+          sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' \
+            /etc/apt/sources.list.d/debian.sources
+          apt-get update
+
+      - uses: actions/checkout@v4
+
+      - name: Comprobar sintaxis y formatos
+        run: tools/check-config.sh
+
+      - name: Comprobar que existen todos los paquetes
+        run: tools/check-packages.sh
+
   build:
+    needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 120
     container:
