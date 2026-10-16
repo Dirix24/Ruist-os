@@ -8,5 +8,3 @@ firmware-amd-graphics
 firmware-misc-nonfree
 acpi
 acpid
-thermald
-tlp

@@ -2,12 +2,6 @@ pipewire
 pipewire-pulse
 wireplumber
 pavucontrol
-network-manager
-network-manager-gnome
-blueman
 bluez
 ffmpeg
-mesa-utils
-xserver-xorg
-xinit
-dbus-x11
+blueman

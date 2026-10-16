@@ -1,0 +1,10 @@
+{
+  "BraveRewardsDisabled": true,
+  "BraveWalletDisabled": true,
+  "BraveVPNDisabled": true,
+  "BraveAIChatEnabled": false,
+  "BackgroundModeEnabled": false,
+  "HardwareAccelerationModeEnabled": true,
+  "MetricsReportingEnabled": false,
+  "PromotionsEnabled": false
+}
