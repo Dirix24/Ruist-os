@@ -49,8 +49,30 @@ A mano, en un Debian trixie con permisos de root:
 ```sh
 sudo apt install live-build debootstrap squashfs-tools xorriso
 tools/check-config.sh
+sudo rm -rf .build chroot binary cache
+mkdir -p .build && touch .build/config
 sudo lb build
 ```
+
+Notas importantes:
+
+- **No ejecutes `lb config`**: reescribiría los archivos de `config/`, que están escritos a mano.
+- **No uses `lb clean --purge`**: borraría `config/common`, `bootstrap`, `chroot`, `binary` y `source`.
+- El archivo `.build/config` lo exige `lb build` y está en `.gitignore`, por eso hay que crearlo a mano (el workflow ya lo hace).
+
+## Probar la ISO
+
+Funciona bien en una máquina virtual (VirtualBox o virt-manager) con 4 GB de RAM, 2 procesadores y un disco de 25 GB.
+
+En modo live, el inicio de sesión es:
+
+| Usuario | Contraseña |
+|---|---|
+| `ruist` | *(vacía: solo pulsa Enter)* |
+
+Si el sistema pide contraseña para una acción de administrador, también vale dejarla vacía.
+
+Al instalar con Calamares, el usuario y la contraseña los eliges tú durante la instalación.
 
 ## Hoja de ruta
 

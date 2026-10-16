@@ -1,8 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Drivers NVIDIA
-Comment=Detecta e instala el driver de tu tarjeta NVIDIA
+Name=Drivers y componentes
+Comment=Detecta e instala el driver de tu tarjeta NVIDIA, Wi-Fi y firmware
 Exec=/usr/local/bin/ruist-drivers
 Icon=video-display
 Terminal=false
-Categories=Settings;System;
+Categories=System;Settings;HardwareSettings;
+Keywords=drivers;nvidia;wifi;firmware;
