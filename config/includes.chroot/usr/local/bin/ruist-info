@@ -1,5 +1,12 @@
 #!/bin/sh
+# ruist-info - muestra el logo de Ruist OS y las características del equipo.
+# Usa fastfetch con la configuración de /etc/fastfetch/config.jsonc.
 
+if command -v fastfetch >/dev/null 2>&1; then
+    exec fastfetch "$@"
+fi
+
+# Plan B si fastfetch no está instalado
 echo "=========================="
 echo "       Ruist OS"
 echo "=========================="
