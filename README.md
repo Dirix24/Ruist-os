@@ -23,7 +23,7 @@ Versión actual: **0.2 "Genesis"**.
 | `ruist-software` | Tienda de programas: Flathub, búsqueda en Flathub, programas de Debian y Synaptic |
 | `ruist-perf` | Modo de rendimiento: `rendimiento`, `equilibrado`, `ahorro`, `estado` |
 | `ruist-update` | Actualiza el sistema con apt |
-| `ruist-info` | Resumen del sistema |
+| `ruist-info` | Logo de Ruist OS y características del equipo (fastfetch) |
 
 ## Estructura
 
@@ -37,6 +37,7 @@ tools/
   check-config.sh       Comprueba sintaxis, XML y JSON (sin red)
   check-packages.sh     Comprueba que todos los paquetes existen en trixie
   make-wallpaper.py     Genera el fondo de pantalla (formas geométricas azules)
+  make-ascii-logo.py    Convierte el logo en arte ASCII para ruist-info
 branding/
   ruist-logo.png        Logo de Ruist OS (original de 512x512)
 .github/workflows/
