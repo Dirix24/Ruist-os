@@ -1,7 +1,11 @@
 systemd
 systemd-sysv
 systemd-timesyncd
+systemd-zram-generator
 irqbalance
+earlyoom
+tlp
+thermald
 util-linux
 procps
 psmisc

@@ -1,0 +1,38 @@
+#!/bin/sh
+# Ruist Center - panel de control de Ruist OS (equivalente a MX Tools)
+
+while true; do
+    OPCION=$(zenity --list --title="Ruist Center" --width=420 --height=380 \
+        --text="¿Qué quieres hacer?" --hide-header \
+        --column="id" --column="Acción" --hide-column=1 \
+        actualizar "Actualizar el sistema" \
+        software   "Tienda de programas" \
+        drivers    "Drivers y componentes (NVIDIA, Wi-Fi...)" \
+        rendimiento "Modo de rendimiento" \
+        limpiar    "Limpiar el sistema" \
+        info       "Información del sistema" 2>/dev/null) || exit 0
+
+    case "$OPCION" in
+        actualizar)
+            xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-update" ;;
+        software)
+            ruist-software ;;
+        drivers)
+            ruist-drivers ;;
+        rendimiento)
+            MODO=$(zenity --list --title="Modo de rendimiento" --width=360 --height=260 \
+                --text="$(ruist-perf estado)" --hide-header \
+                --column="id" --column="Modo" --hide-column=1 \
+                rendimiento "Rendimiento máximo" \
+                equilibrado "Equilibrado (automático)" \
+                ahorro      "Ahorro de energía" 2>/dev/null) && ruist-perf "$MODO" ;;
+        limpiar)
+            xfce4-terminal --hold -e "pkexec sh -c 'apt-get autoremove -y && apt-get clean && journalctl --vacuum-size=50M'" ;;
+        info)
+            zenity --text-info --title="Información del sistema" --width=520 --height=420 \
+                --filename=/dev/stdin <<EOF 2>/dev/null
+$(ruist-info)
+EOF
+            ;;
+    esac
+done

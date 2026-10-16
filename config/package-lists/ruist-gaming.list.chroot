@@ -1,0 +1,10 @@
+# Optimización para juegos
+gamemode
+mangohud
+libgamemode0
+libgl1-mesa-dri
+mesa-vulkan-drivers
+mesa-utils
+vulkan-tools
+libvulkan1
+libsdl2-2.0-0

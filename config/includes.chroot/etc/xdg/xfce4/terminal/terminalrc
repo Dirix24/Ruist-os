@@ -1,0 +1,8 @@
+[Configuration]
+FontName=JetBrains Mono 10
+MiscMenubarDefault=FALSE
+MiscToolbarDefault=FALSE
+ScrollingBar=TERMINAL_SCROLLBAR_NONE
+ColorForeground=#d6dbe0
+ColorBackground=#0b0d10
+ColorCursor=#7aa2f7

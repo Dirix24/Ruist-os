@@ -1,0 +1,31 @@
+#!/bin/bash
+# Elimina aplicaciones y servicios innecesarios. Solo purga lo que esté instalado.
+set -e
+
+PURGE="
+xfburn parole orage ristretto xfce4-dict xfce4-goodies
+hexchat pidgin transmission-gtk transmission-common thunderbird
+libreoffice-common libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress
+firefox-esr rhythmbox totem gnome-games
+cups cups-daemon cups-browsed avahi-daemon
+exim4-base exim4-daemon-light
+popularity-contest reportbug
+tasksel tasksel-data installation-report
+"
+
+TO_REMOVE=""
+for pkg in $PURGE; do
+    if dpkg -s "$pkg" >/dev/null 2>&1; then
+        TO_REMOVE="$TO_REMOVE $pkg"
+    fi
+done
+
+if [ -n "$TO_REMOVE" ]; then
+    apt-get purge -y --auto-remove $TO_REMOVE
+fi
+
+# Servicios que no aportan en un equipo personal de escritorio
+for svc in man-db.timer NetworkManager-wait-online.service; do
+    systemctl disable "$svc" 2>/dev/null || true
+done
+systemctl mask NetworkManager-wait-online.service 2>/dev/null || true

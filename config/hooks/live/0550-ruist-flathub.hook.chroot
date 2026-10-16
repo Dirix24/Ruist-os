@@ -1,0 +1,5 @@
+#!/bin/bash
+# Añade Flathub a todo el sistema. Si no hay red al compilar, no falla:
+# ruist-software lo vuelve a añadir para el usuario cuando se necesita.
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+exit 0
