@@ -25,7 +25,7 @@ if [ -n "$TO_REMOVE" ]; then
 fi
 
 # Servicios que no aportan en un equipo personal de escritorio
-for svc in apt-daily.timer apt-daily-upgrade.timer man-db.timer NetworkManager-wait-online.service; do
+for svc in man-db.timer NetworkManager-wait-online.service; do
     systemctl disable "$svc" 2>/dev/null || true
 done
 systemctl mask NetworkManager-wait-online.service 2>/dev/null || true

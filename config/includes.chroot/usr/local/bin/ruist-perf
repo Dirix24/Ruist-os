@@ -1,0 +1,54 @@
+#!/bin/sh
+# ruist-perf - cambia el modo de rendimiento de la CPU
+# Uso: ruist-perf [rendimiento|equilibrado|ahorro|estado]
+
+MODE="${1:-estado}"
+NOTURBO=/sys/devices/system/cpu/intel_pstate/no_turbo
+
+estado() {
+    gov=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "desconocido")
+    echo "Governor actual: $gov"
+    if [ -f "$NOTURBO" ]; then
+        if [ "$(cat "$NOTURBO")" = "0" ]; then
+            echo "Turbo: activado"
+        else
+            echo "Turbo: desactivado"
+        fi
+    fi
+}
+
+poner() {
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo "$1" > "$f"
+    done
+    if [ -f "$NOTURBO" ]; then
+        echo "$2" > "$NOTURBO"
+    fi
+}
+
+case "$MODE" in
+    rendimiento|equilibrado|ahorro)
+        if [ "$(id -u)" -ne 0 ]; then
+            exec pkexec "$0" "$MODE"
+        fi
+        ;;
+    estado) estado; exit 0 ;;
+    *) echo "Uso: ruist-perf [rendimiento|equilibrado|ahorro|estado]"; exit 1 ;;
+esac
+
+case "$MODE" in
+    rendimiento)
+        systemctl stop tlp.service 2>/dev/null || true
+        poner performance 0
+        echo "Modo rendimiento activado." ;;
+    ahorro)
+        systemctl stop tlp.service 2>/dev/null || true
+        poner powersave 1
+        echo "Modo ahorro activado." ;;
+    equilibrado)
+        # TLP vuelve a decidir según estés con corriente o con batería
+        systemctl restart tlp.service 2>/dev/null || poner powersave 0
+        echo "Modo equilibrado activado (gestionado por TLP)." ;;
+esac
+
+estado

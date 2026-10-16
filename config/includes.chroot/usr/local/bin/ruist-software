@@ -1,0 +1,35 @@
+#!/bin/sh
+# ruist-software - instalador de software curado (equivalente a MX Package Installer)
+
+if [ "$(id -u)" -eq 0 ]; then
+    # Modo root: instala lo que se le pasa como argumentos
+    for item in "$@"; do
+        case "$item" in
+            steam)
+                dpkg --add-architecture i386
+                apt-get update
+                apt-get install -y steam-installer ;;
+            *) apt-get install -y "$item" ;;
+        esac
+    done
+    exit 0
+fi
+
+SELECCION=$(zenity --list --checklist --title="Instalar software" --width=480 --height=460 \
+    --text="Marca lo que quieras instalar" \
+    --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
+    FALSE steam        "Steam (juegos)" \
+    FALSE wine         "Wine (programas de Windows)" \
+    FALSE obs-studio   "OBS Studio (grabación y streaming)" \
+    FALSE vlc          "VLC (reproductor de vídeo)" \
+    FALSE audacity     "Audacity (audio)" \
+    FALSE krita        "Krita (pintura digital)" \
+    FALSE kdenlive     "Kdenlive (edición de vídeo)" \
+    FALSE godot3       "Godot (motor de videojuegos, si está en el repositorio)" \
+    FALSE libreoffice  "LibreOffice (ofimática)" \
+    FALSE flatpak      "Flatpak (tiendas de aplicaciones extra)" 2>/dev/null) || exit 0
+
+[ -z "$SELECCION" ] && exit 0
+
+# shellcheck disable=SC2086
+xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-software $SELECCION"
