@@ -1,0 +1,5 @@
+favorites=brave-browser.desktop,ruist-software.desktop,ruist-center.desktop,ruist-drivers.desktop,xfce4-terminal.desktop,thunar.desktop,mousepad.desktop
+button-title=Ruist
+button-single-row=false
+show-button-title=true
+show-button-icon=true

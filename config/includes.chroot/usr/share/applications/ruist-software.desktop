@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Tienda de programas
+Comment=Instala programas desde Flathub, Debian y Synaptic
+Exec=/usr/local/bin/ruist-software
+Icon=system-software-install
+Terminal=false
+Categories=System;PackageManager;Settings;
+Keywords=tienda;programas;instalar;software;flathub;
