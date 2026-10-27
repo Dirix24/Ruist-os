@@ -16,7 +16,9 @@ UMBRAL = 125  # luminosidad a partir de la cual un píxel cuenta como "luz"
 
 
 def main(entrada, salida):
-    img = Image.open(entrada).convert("L").resize((ANCHO, ANCHO), Image.LANCZOS)
+    source = Image.open(entrada).convert("RGBA")
+    fondo = Image.new("RGBA", source.size, (0, 0, 0, 255))
+    img = Image.alpha_composite(fondo, source).convert("L").resize((ANCHO, ANCHO), Image.Resampling.LANCZOS)
     px = img.load()
 
     def luz(x, y):
@@ -41,6 +43,6 @@ def main(entrada, salida):
 
 
 if __name__ == "__main__":
-    entrada = sys.argv[1] if len(sys.argv) > 1 else "branding/ruist-logo.png"
+    entrada = sys.argv[1] if len(sys.argv) > 1 else "branding/ruist-logo-mark.png"
     salida = sys.argv[2] if len(sys.argv) > 2 else "config/includes.chroot/usr/share/ruist/logo.txt"
     main(entrada, salida)

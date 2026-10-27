@@ -38,7 +38,7 @@ Los perfiles `universal`, `gaming`, `development`, `architecture`, `productivity
 
 ### Escritorio y límite conocido
 
-`ruist-desktop` abre las herramientas de configuración mantenidas por XFCE. Desde ellas se elige una imagen personal como fondo y se ajustan temas, iconos, efectos y pantallas; XFCE guarda esos cambios en la sesión del usuario. La identidad actual usa Arc-Dark, Papirus-Dark y fondos de Ruist; el logotipo se actualizará con el archivo final que entregue el propietario. Xfdesktop permite mover y ordenar los iconos, pero su herramienta de organización automática no ofrece una opción documentada para centrar el grupo de iconos. El centrado automático queda pendiente de una prueba técnica de un gestor de iconos compatible o un componente propio, sin sustituir Xfdesktop. [Manual de Xfdesktop en Debian trixie](https://manpages.debian.org/trixie/xfdesktop4/xfdesktop.1.en.html).
+`ruist-desktop` abre las herramientas de configuración mantenidas por XFCE. Desde ellas se elige una imagen personal como fondo y se ajustan temas, iconos, efectos y pantallas; XFCE guarda esos cambios en la sesión del usuario. La identidad actual usa Arc-Dark, Papirus-Dark, fondos de Ruist y el logotipo oficial proporcionado por el propietario. Xfdesktop permite mover y ordenar los iconos, pero su herramienta de organización automática no ofrece una opción documentada para centrar el grupo de iconos. El centrado automático queda pendiente de una prueba técnica de un gestor de iconos compatible o un componente propio, sin sustituir Xfdesktop. [Manual de Xfdesktop en Debian trixie](https://manpages.debian.org/trixie/xfdesktop4/xfdesktop.1.en.html).
 
 ## Estructura
 
@@ -55,7 +55,8 @@ tools/
   make-wallpaper.py     Genera el fondo de pantalla (formas geométricas azules)
   make-ascii-logo.py    Convierte el logo en arte ASCII para ruist-info
 branding/
-  ruist-logo.png        Logo de Ruist OS (original de 512x512)
+  ruist-logo.png        Logo oficial original (512x512)
+  ruist-logo-mark.png   Variante transparente del símbolo para iconos
 .github/workflows/
   build-iso.yml         Compila la ISO en GitHub Actions
 ```
@@ -110,7 +111,6 @@ La instalación base de Calamares no actualiza índices APT y funciona sin conex
 
 - Añadir selección de perfiles de aplicaciones en Calamares y registrar su propiedad para que sigan siendo reversibles.
 - Resolver técnicamente el centrado de iconos movibles en Xfdesktop.
-- Reemplazar el logo actual por el archivo final que entregue el propietario.
 - Construir la ISO y probarla en una máquina virtual y en el portátil (ASUS X550LC); medir memoria en reposo.
 - Driver NVIDIA 390xx para tarjetas antiguas (Debian trixie ya no lo incluye).
 - Separar la configuración en una base común y una capa por escritorio, para publicar también una edición con **GNOME**.
