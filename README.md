@@ -20,8 +20,9 @@ Versión actual: **0.2 "Genesis"**.
 |---|---|
 | `ruist-center` | Panel de control: actualizar, tienda, drivers, rendimiento, limpieza e información |
 | `ruist-drivers` | Gestor de drivers: NVIDIA (con `nvidia-detect`), Wi-Fi, microcódigo, firmware e impresoras |
-| `ruist-software` | Tienda de programas: Flathub, búsqueda en Flathub, programas de Debian y Synaptic |
+| `ruist-software` | Tienda de programas: instala, busca, consulta y desinstala aplicaciones APT y Flatpak |
 | `ruist-perf` | Modo de rendimiento: `rendimiento`, `equilibrado`, `ahorro`, `estado` |
+| `ruist-kernel` | Gestiona el metapaquete estable `linux-image-amd64` y conserva kernels anteriores |
 | `ruist-update` | Actualiza el sistema con apt |
 | `ruist-maintenance cleanup` | Mantenimiento con confirmación de APT antes de retirar paquetes |
 | `ruist-info` | Logo de Ruist OS y características del equipo (fastfetch) |
@@ -31,11 +32,13 @@ Versión actual: **0.2 "Genesis"**.
 
 `ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
 
-Los perfiles `universal`, `gaming`, `development`, `architecture`, `productivity`, `desktop-plasma` y `desktop-lxqt` son opcionales y no se incluyen en la ISO base. Se pueden combinar con `ruist-profile install gaming development`; APT muestra los cambios y pide confirmación. Los perfiles Plasma y LXQt se instalan junto a XFCE y la sesión se elige en la pantalla de inicio. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza. Si Gaming instala Steam, habilita i386 para descargar sus bibliotecas de 32 bits; esa arquitectura se conserva para que otros programas i386 sigan funcionando.
+Los perfiles `universal`, `gaming`, `development`, `architecture`, `productivity`, `desktop-plasma` y `desktop-lxqt` son opcionales y no se incluyen en la ISO base. Se pueden combinar con `ruist-profile install gaming development`; APT muestra los cambios y pide confirmación. Plasma y LXQt se instalan después junto a XFCE; la sesión se elige en la pantalla de inicio. Así la base de Calamares sigue instalándose sin Internet. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza. Si Gaming instala Steam, habilita i386 para descargar sus bibliotecas de 32 bits; esa arquitectura se conserva para que otros programas i386 sigan funcionando.
+
+`ruist-kernel` solo ofrece el metapaquete estable de Debian para amd64/i386. Instalarlo no elimina versiones anteriores: GRUB conserva esas entradas como alternativa de arranque. No ofrece kernels externos ni promete mejoras de rendimiento.
 
 ### Escritorio y límite conocido
 
-`ruist-desktop` abre las herramientas de configuración mantenidas por XFCE. Desde ellas se elige una imagen personal como fondo y se ajustan temas, iconos, efectos y pantallas; XFCE guarda esos cambios en la sesión del usuario. Xfdesktop permite mover y ordenar los iconos, pero su herramienta de organización automática no ofrece una opción documentada para centrar el grupo de iconos. El centrado automático queda pendiente de una prueba técnica de un gestor de iconos compatible o un componente propio, sin sustituir Xfdesktop en esta entrega. [Manual de Xfdesktop en Debian trixie](https://manpages.debian.org/trixie/xfdesktop4/xfdesktop.1.en.html).
+`ruist-desktop` abre las herramientas de configuración mantenidas por XFCE. Desde ellas se elige una imagen personal como fondo y se ajustan temas, iconos, efectos y pantallas; XFCE guarda esos cambios en la sesión del usuario. La identidad actual usa Arc-Dark, Papirus-Dark y fondos de Ruist; el logotipo se actualizará con el archivo final que entregue el propietario. Xfdesktop permite mover y ordenar los iconos, pero su herramienta de organización automática no ofrece una opción documentada para centrar el grupo de iconos. El centrado automático queda pendiente de una prueba técnica de un gestor de iconos compatible o un componente propio, sin sustituir Xfdesktop. [Manual de Xfdesktop en Debian trixie](https://manpages.debian.org/trixie/xfdesktop4/xfdesktop.1.en.html).
 
 ## Estructura
 
@@ -79,6 +82,8 @@ tests/check-config.sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
+La tienda APT usa una lista permitida de aplicaciones y deja que APT muestre dependencias y solicite confirmación. La retirada no ejecuta `autoremove`. Flatpak se administra solo en el ámbito del usuario. El catálogo APT completo se puede consultar con Synaptic; la búsqueda ampliada usa Flathub cuando hay conexión.
+
 Notas importantes:
 
 - **No ejecutes `lb config`**: reescribiría los archivos de `config/`, que están escritos a mano.
@@ -87,7 +92,7 @@ Notas importantes:
 
 ## Probar la ISO
 
-Funciona bien en una máquina virtual (VirtualBox o virt-manager) con 4 GB de RAM, 2 procesadores y un disco de 25 GB.
+Configuración recomendada para probar en una máquina virtual (VirtualBox o virt-manager): 4 GB de RAM, 2 procesadores y un disco de 25 GB. La ISO todavía necesita una ejecución real en una máquina virtual.
 
 En modo live, el inicio de sesión es:
 
@@ -99,9 +104,14 @@ Si el sistema pide contraseña para una acción de administrador, también vale 
 
 Al instalar con Calamares, el usuario y la contraseña los eliges tú durante la instalación.
 
+La configuración de Calamares no actualiza índices APT durante la instalación (`update_db: false`, `update_system: false`), por lo que requiere que la ISO incluya las dependencias base. Los perfiles de aplicaciones y escritorios alternativos se instalan desde Ruist Center después y necesitan conexión si los paquetes no están en caché.
+
 ## Hoja de ruta
 
-- Probar la ISO en el portátil (ASUS X550LC) y medir el consumo de memoria en reposo (objetivo: unos 950 MB).
+- Completar la selección de escritorio y perfiles en Calamares manteniendo el flujo base offline.
+- Resolver técnicamente el centrado de iconos movibles en Xfdesktop.
+- Reemplazar el logo actual por el archivo final que entregue el propietario.
+- Construir la ISO y probarla en una máquina virtual y en el portátil (ASUS X550LC); medir memoria en reposo.
 - Driver NVIDIA 390xx para tarjetas antiguas (Debian trixie ya no lo incluye).
 - Separar la configuración en una base común y una capa por escritorio, para publicar también una edición con **GNOME**.
 - Página web del proyecto.

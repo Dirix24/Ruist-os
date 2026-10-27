@@ -1,0 +1,18 @@
+# Catálogo de Ruist Store: paquetes Debian permitidos y comprobados en trixie.
+steam-installer
+wine
+obs-studio
+vlc
+audacity
+krita
+gimp
+kdenlive
+libreoffice
+libreoffice-writer
+lutris
+simplescreenrecorder
+freecad
+blender
+inkscape
+git
+build-essential

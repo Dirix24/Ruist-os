@@ -7,7 +7,7 @@
 cd "$(dirname "$0")/.." || exit 1
 
 FALTAN=0
-for lista in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot; do
+for lista in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot config/includes.chroot/usr/share/ruist/store/apt-packages.list; do
     [ -f "$lista" ] || continue
     while IFS= read -r paquete; do
         paquete="${paquete%%#*}"

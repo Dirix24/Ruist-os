@@ -3,9 +3,10 @@
 # (equivalente a MX Package Installer + una tienda de Flathub)
 #
 # Sin argumentos abre el menú gráfico.
-# Como root, "apt PAQUETE..." instala paquetes de Debian ("steam" configura i386).
+# Como root, "apt PAQUETE..." y "apt-remove PAQUETE..." gestionan el catálogo limitado.
 
 FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
+APT_CATALOG="${RUIST_APT_CATALOG:-/usr/share/ruist/store/apt-packages.list}"
 set -eu
 set -f
 
@@ -19,30 +20,61 @@ valid_flatpak_id() {
 
 valid_apt_package() {
     case "$1" in
-        steam|wine|obs-studio|vlc|audacity|krita|kdenlive|libreoffice|lutris|simplescreenrecorder) return 0 ;;
-        *) return 1 ;;
+        steam) return 0 ;;
+        *) grep -Fxq -- "$1" "$APT_CATALOG" 2>/dev/null ;;
     esac
 }
 
-if [ "${1:-}" = "apt" ]; then
+if [ "${1:-}" = "apt" ] || [ "${1:-}" = "apt-remove" ]; then
+    action=$1
     shift
     [ "$#" -gt 0 ] || { echo "Indica al menos un paquete APT." >&2; exit 2; }
     if [ "$(id -u)" -ne 0 ]; then
-        exec pkexec /usr/local/bin/ruist-software apt "$@"
+        exec pkexec /usr/local/bin/ruist-software "$action" "$@"
     fi
     for item in "$@"; do
         if ! valid_apt_package "$item"; then
             echo "Paquete fuera del catálogo de Ruist Store: $item" >&2
             exit 2
         fi
-        case "$item" in
-            steam)
+        case "$action:$item" in
+            apt:steam|apt:steam-installer)
                 dpkg --add-architecture i386
                 apt-get update
                 apt-get install steam-installer ;;
-            *) apt-get install "$item" ;;
+            apt:*) apt-get install "$item" ;;
+            apt-remove:steam) apt-get remove steam-installer ;;
+            apt-remove:*) apt-get remove "$item" ;;
         esac
     done
+    exit 0
+fi
+
+if [ "${1:-}" = "flatpak-remove" ]; then
+    [ "$(id -u)" -ne 0 ] || { echo "Flatpak se administra desde la sesión del usuario." >&2; exit 2; }
+    shift
+    [ "$#" -gt 0 ] || { echo "Indica al menos una aplicación Flatpak." >&2; exit 2; }
+    for id in "$@"; do
+        if ! valid_flatpak_id "$id"; then
+            echo "Identificador Flatpak inválido: $id" >&2
+            exit 2
+        fi
+    done
+    flatpak uninstall --user "$@"
+    exit $?
+fi
+
+if [ "${1:-}" = "list" ]; then
+    [ "$#" -eq 1 ] || exit 2
+    echo 'Aplicaciones APT del catálogo instaladas:'
+    while IFS= read -r item; do
+        case "$item" in ''|'#'*) continue ;; esac
+        status=$(dpkg-query -W -f='${db:Status-Status}' "$item" 2>/dev/null || true)
+        [ "$status" = installed ] && printf 'APT\t%s\n' "$item"
+    done < "$APT_CATALOG"
+    if command -v flatpak >/dev/null 2>&1; then
+        flatpak list --user --app --columns=application,name 2>/dev/null | sed 's/^/Flatpak\t/' || true
+    fi
     exit 0
 fi
 
@@ -69,8 +101,8 @@ terminal() {
 }
 
 menu_apt() {
-    SEL=$(zenity --list --checklist --title="Programas de Debian" --width=500 --height=480 \
-        --text="Marca lo que quieras instalar" \
+    SEL=$(zenity --list --checklist --title="Programas de Debian" --width=560 --height=560 \
+        --text="Aplicaciones de los repositorios APT configurados" \
         --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
         FALSE steam        "Steam (juegos)" \
         FALSE wine         "Wine (programas de Windows)" \
@@ -78,14 +110,66 @@ menu_apt() {
         FALSE vlc          "VLC (reproductor de vídeo)" \
         FALSE audacity     "Audacity (audio)" \
         FALSE krita        "Krita (pintura digital)" \
+        FALSE gimp         "GIMP (edición de imagen)" \
         FALSE kdenlive     "Kdenlive (edición de vídeo)" \
         FALSE libreoffice  "LibreOffice (ofimática)" \
+        FALSE freecad      "FreeCAD (CAD)" \
+        FALSE blender      "Blender (modelado 3D)" \
+        FALSE inkscape     "Inkscape (diseño vectorial)" \
+        FALSE git          "Git (desarrollo)" \
+        FALSE build-essential "Herramientas de compilación" \
         FALSE lutris       "Lutris (gestor de juegos)" \
         FALSE simplescreenrecorder "SimpleScreenRecorder (grabar pantalla)" 2>/dev/null) || return
     if [ -n "$SEL" ]; then
         set -- $SEL
         terminal /usr/local/bin/ruist-software apt "$@"
     fi
+}
+
+menu_instaladas() {
+    RES=$(/usr/local/bin/ruist-software list 2>&1)
+    [ -n "$RES" ] || RES="No hay aplicaciones del catálogo instaladas."
+    zenity --text-info --title="Aplicaciones instaladas" --width=620 --height=460 \
+        --filename=/dev/stdin <<EOF 2>/dev/null
+$RES
+EOF
+}
+
+menu_quitar_apt() {
+    set --
+    while IFS= read -r item; do
+        case "$item" in ''|'#'*) continue ;; esac
+        status=$(dpkg-query -W -f='${db:Status-Status}' "$item" 2>/dev/null || true)
+        if [ "$status" = installed ]; then
+            set -- "$@" FALSE "$item" "$item"
+        fi
+    done < "$APT_CATALOG"
+    [ "$#" -gt 0 ] || { zenity --info --text="No hay aplicaciones APT del catálogo para retirar." 2>/dev/null; return; }
+    SEL=$(zenity --list --checklist --title="Desinstalar aplicaciones APT" --width=560 --height=500 \
+        --text="APT mostrará dependencias y pedirá confirmación. No se ejecutará autoremove." \
+        --column="" --column="id" --column="Aplicación" --hide-column=2 --separator=" " "$@" 2>/dev/null) || return
+    [ -n "$SEL" ] || return
+    set -- $SEL
+    terminal /usr/local/bin/ruist-software apt-remove "$@"
+}
+
+menu_quitar_flatpak() {
+    RES=$(flatpak list --user --app --columns=application,name 2>/dev/null) || return
+    [ -n "$RES" ] || { zenity --info --text="No hay aplicaciones Flatpak instaladas para este usuario." 2>/dev/null; return; }
+    set --
+    while IFS="$(printf '\t')" read -r app name; do
+        valid_flatpak_id "$app" || continue
+        set -- "$@" FALSE "$app" "$name"
+    done <<EOF
+$RES
+EOF
+    [ "$#" -gt 0 ] || { zenity --info --text="No se encontraron identificadores válidos de Flatpak." 2>/dev/null; return; }
+    SEL=$(zenity --list --checklist --title="Desinstalar aplicaciones Flatpak" --width=640 --height=500 \
+        --text="Solo se retirarán aplicaciones Flatpak de tu usuario." \
+        --column="" --column="id" --column="Aplicación" --hide-column=2 --separator=" " "$@" 2>/dev/null) || return
+    [ -n "$SEL" ] || return
+    set -- $SEL
+    terminal /usr/local/bin/ruist-software flatpak-remove "$@"
 }
 
 menu_flathub() {
@@ -131,17 +215,25 @@ menu_buscar() {
 
 while true; do
     OPCION=$(zenity --list --title="Tienda de Ruist OS" --width=440 --height=360 \
-        --text="Instalar programas" --hide-header \
+        --text="Instalar, revisar y retirar aplicaciones" --hide-header \
         --column="id" --column="Origen" --hide-column=1 \
         flathub "Tienda Flathub (programas populares)" \
         buscar  "Buscar en Flathub" \
         apt     "Programas de Debian (rápidos y ligeros)" \
+        instaladas "Ver aplicaciones instaladas" \
+        quitar-apt "Desinstalar aplicaciones APT" \
+        quitar-flatpak "Desinstalar aplicaciones Flatpak" \
+        actualizar "Actualizar el sistema" \
         synaptic "Catálogo completo de Debian (Synaptic)" 2>/dev/null) || exit 0
 
     case "$OPCION" in
+        instaladas) menu_instaladas ;;
         flathub)  menu_flathub ;;
         buscar)   menu_buscar ;;
         apt)      menu_apt ;;
+        quitar-apt) menu_quitar_apt ;;
+        quitar-flatpak) menu_quitar_flatpak ;;
+        actualizar) terminal /usr/local/bin/ruist-update ;;
         synaptic) pkexec synaptic ;;
     esac
 done

@@ -13,7 +13,8 @@ while true; do
         info       "Información del sistema" \
         escritorio "Configuración del escritorio" \
         perfiles   "Perfiles de aplicaciones" \
-        hardware   "Inventario de hardware" 2>/dev/null) || exit 0
+        hardware   "Inventario de hardware" \
+        kernel     "Kernel estable y recuperación" 2>/dev/null) || exit 0
 
     case "$OPCION" in
         actualizar)
@@ -48,5 +49,7 @@ EOF
             ruist-desktop ;;
         perfiles)
             ruist-profile ;;
+        kernel)
+            ruist-kernel ;;
     esac
 done

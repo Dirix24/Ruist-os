@@ -42,7 +42,7 @@ echo "Comprobando listas de paquetes..."
 if ! find config/package-lists -maxdepth 1 -type f -name '*.list.chroot' -print -quit | grep -q .; then
     fallo "no hay listas *.list.chroot en config/package-lists"
 fi
-for f in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot; do
+for f in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot config/includes.chroot/usr/share/ruist/store/apt-packages.list; do
     [ -f "$f" ] || continue
     if awk '/^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
             /[[:space:]]/ { found=1; exit }
@@ -56,6 +56,8 @@ for f in config/bootstrap config/chroot config/binary config/common config/sourc
          config/archives/debian.list.chroot \
          config/includes.chroot/etc/calamares/settings.conf \
          config/includes.chroot/etc/calamares/modules/packages.conf \
+         config/includes.chroot/usr/local/bin/ruist-kernel \
+         config/includes.chroot/usr/share/ruist/store/apt-packages.list \
          config/includes.chroot/usr/share/ruist/profiles/universal.list.chroot \
          config/includes.chroot/usr/share/ruist/profiles/gaming.list.chroot \
          config/includes.chroot/usr/share/ruist/profiles/development.list.chroot \

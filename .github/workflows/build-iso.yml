@@ -31,7 +31,7 @@ jobs:
       - name: Comprobar sintaxis y formatos
         run: tools/check-config.sh
 
-      - name: Ejecutar pruebas unitarias de Ruist Detect
+      - name: Ejecutar pruebas unitarias de Ruist OS
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Comprobar que existen todos los paquetes
