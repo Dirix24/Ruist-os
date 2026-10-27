@@ -24,7 +24,7 @@ cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf" <<'E
 update_db: false
 update_system: false
 EOF
-for profile in universal gaming development architecture productivity; do
+for profile in universal gaming development architecture productivity desktop-plasma desktop-lxqt; do
     touch "$FIXTURE/config/includes.chroot/usr/share/ruist/profiles/$profile.list.chroot"
 done
 

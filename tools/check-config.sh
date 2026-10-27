@@ -60,7 +60,9 @@ for f in config/bootstrap config/chroot config/binary config/common config/sourc
          config/includes.chroot/usr/share/ruist/profiles/gaming.list.chroot \
          config/includes.chroot/usr/share/ruist/profiles/development.list.chroot \
          config/includes.chroot/usr/share/ruist/profiles/architecture.list.chroot \
-         config/includes.chroot/usr/share/ruist/profiles/productivity.list.chroot; do
+         config/includes.chroot/usr/share/ruist/profiles/productivity.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/desktop-plasma.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/desktop-lxqt.list.chroot; do
     [ -f "$f" ] || fallo "falta $f"
 done
 [ -d config/package-lists ] || fallo "falta el directorio config/package-lists"
