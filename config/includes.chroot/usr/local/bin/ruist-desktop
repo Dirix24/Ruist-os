@@ -1,0 +1,22 @@
+#!/bin/sh
+# Open supported native XFCE settings dialogs; preferences persist in the user session.
+
+set -eu
+
+while :; do
+    OPTION=$(zenity --list --title="Ruist Desktop" --width=440 --height=300 \
+        --text="Configura el escritorio XFCE" --hide-header \
+        --column="id" --column="Ajuste" --hide-column=1 \
+        fondo "Fondo e iconos del escritorio" \
+        apariencia "Tema e iconos" \
+        efectos "Efectos de ventanas" \
+        pantalla "Pantallas y resolución" 2>/dev/null) || exit 0
+
+    case "$OPTION" in
+        fondo) exec xfdesktop-settings ;;
+        apariencia) exec xfce4-appearance-settings ;;
+        efectos) exec xfwm4-tweaks-settings ;;
+        pantalla) exec xfce4-display-settings ;;
+        *) exit 0 ;;
+    esac
+done

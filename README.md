@@ -26,8 +26,13 @@ Versión actual: **0.2 "Genesis"**.
 | `ruist-maintenance cleanup` | Mantenimiento con confirmación de APT antes de retirar paquetes |
 | `ruist-info` | Logo de Ruist OS y características del equipo (fastfetch) |
 | `ruist-detect` | Inventario de hardware de solo lectura; `--json` ofrece datos estructurados |
+| `ruist-desktop` | Abre los ajustes nativos de fondo, iconos, tema, efectos y pantallas de XFCE |
 
 `ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
+
+### Escritorio y límite conocido
+
+`ruist-desktop` abre las herramientas de configuración mantenidas por XFCE. Desde ellas se elige una imagen personal como fondo y se ajustan temas, iconos, efectos y pantallas; XFCE guarda esos cambios en la sesión del usuario. Xfdesktop permite mover y ordenar los iconos, pero su herramienta de organización automática no ofrece una opción documentada para centrar el grupo de iconos. El centrado automático queda pendiente de una prueba técnica de un gestor de iconos compatible o un componente propio, sin sustituir Xfdesktop en esta entrega. [Manual de Xfdesktop en Debian trixie](https://manpages.debian.org/trixie/xfdesktop4/xfdesktop.1.en.html).
 
 ## Estructura
 
