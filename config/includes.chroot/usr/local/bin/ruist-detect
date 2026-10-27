@@ -1,0 +1,201 @@
+#!/usr/bin/python3
+"""Read-only hardware inventory for Ruist OS."""
+
+import argparse
+import json
+import platform
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def read(path):
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace").strip()
+    except (OSError, UnicodeError):
+        return None
+
+
+def run(args, timeout=8):
+    if not shutil.which(args[0]):
+        return None
+    try:
+        result = subprocess.run(args, text=True, capture_output=True, timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def memory_info(proc="/proc/meminfo"):
+    values = {}
+    text = read(proc) or ""
+    for line in text.splitlines():
+        match = re.match(r"^(MemTotal|MemAvailable):\s+(\d+)\s+kB$", line)
+        if match:
+            values[match.group(1)] = int(match.group(2)) * 1024
+    return {"total_bytes": values.get("MemTotal"), "available_bytes": values.get("MemAvailable")}
+
+
+def cpu_info(proc="/proc/cpuinfo"):
+    text = read(proc) or ""
+    model = None
+    flags = []
+    for line in text.splitlines():
+        key, sep, value = line.partition(":")
+        if not sep:
+            continue
+        if key.strip() in ("model name", "Hardware") and not model:
+            model = value.strip()
+        elif key.strip() in ("flags", "Features") and not flags:
+            flags = sorted(set(value.split()))
+    return {"model": model, "architecture": platform.machine(), "flags": flags}
+
+
+def pci_devices(sys_root="/sys/bus/pci/devices", modules_root="/sys/module"):
+    devices = []
+    for path in sorted(Path(sys_root).glob("*") if Path(sys_root).exists() else []):
+        cls = read(path / "class") or ""
+        if not cls.startswith("0x03"):
+            continue
+        driver_link = path / "driver"
+        try:
+            driver = driver_link.resolve(strict=True).name
+        except OSError:
+            driver = None
+        lspci = run(["lspci", "-Dnnk", "-s", path.name]) or ""
+        description = next((line.strip() for line in lspci.splitlines() if line.strip() and not line.lstrip().startswith(("Kernel", "Subsystem"))), None)
+        module_lines = [line.split(":", 1)[1].strip() for line in lspci.splitlines() if line.strip().startswith("Kernel modules:")]
+        module_names = [name.strip() for name in module_lines[0].split(",")] if module_lines else []
+        installed = {}
+        for name in module_names:
+            if not shutil.which("modinfo"):
+                installed[name] = "tool_unavailable"
+            else:
+                installed[name] = "present_for_running_kernel" if run(["modinfo", name]) is not None else "not_found_for_running_kernel"
+        devices.append({
+            "pci_id": path.name,
+            "description": description or f"PCI graphics device {path.name}",
+            "vendor_id": read(path / "vendor"),
+            "device_id": read(path / "device"),
+            "detected": True,
+            "driver_active": driver,
+            "driver_candidates": module_names,
+            "driver_module_status": installed,
+            "module_loaded": bool(driver and Path(modules_root, driver).exists()),
+        })
+    return devices
+
+
+def verify_graphics():
+    gl_available = shutil.which("glxinfo") is not None
+    vk_available = shutil.which("vulkaninfo") is not None
+    gl = run(["glxinfo", "-B"])
+    vk = run(["vulkaninfo", "--summary"], timeout=15)
+    gl_ok = bool(gl and re.search(r"direct rendering:\s*Yes", gl, re.I) and not re.search(r"llvmpipe|softpipe|Software Rasterizer", gl, re.I))
+    vk_names = re.findall(r"deviceName\s*=\s*(.+)", vk or "", re.I)
+    vk_types = re.findall(r"deviceType\s*=\s*PHYSICAL_DEVICE_TYPE_(\w+)", vk or "", re.I)
+    software_name = re.compile(r"llvmpipe|lavapipe|swiftshader", re.I)
+    hardware_device = any(kind.upper() != "CPU" for kind in vk_types)
+    if not vk_types:
+        hardware_device = any(not software_name.search(name) for name in vk_names)
+    software_only = bool(vk_names) and not hardware_device
+    vk_ok = bool(vk_names and hardware_device)
+    return {
+        "opengl": "verified_on_system" if gl_ok else ("not_verified" if gl_available else "tool_unavailable"),
+        "vulkan": "verified_on_system" if vk_ok else ("software_only" if software_only else ("not_verified" if vk_available else "tool_unavailable")),
+        "scope": "system-wide; not attributed to a specific GPU on multi-GPU systems",
+    }
+
+
+def network_devices(sys_root="/sys/class/net"):
+    found = []
+    root = Path(sys_root)
+    for path in sorted(root.iterdir() if root.exists() else []):
+        if path.name == "lo":
+            continue
+        driver = None
+        try:
+            driver = (path / "device" / "driver").resolve(strict=True).name
+        except OSError:
+            pass
+        found.append({"name": path.name, "state": read(path / "operstate"), "driver_active": driver, "detected": True})
+    return found
+
+
+def collect_report():
+    devices = pci_devices()
+    graphics_verification = verify_graphics()
+    lsblk = run(["lsblk", "--json", "--output", "NAME,SIZE,TYPE,MODEL,TRAN,FSTYPE,MOUNTPOINT"])
+    try:
+        storage = json.loads(lsblk)["blockdevices"] if lsblk else []
+    except (json.JSONDecodeError, KeyError, TypeError):
+        storage = []
+    xrandr = run(["xrandr", "--current"])
+    displays = []
+    if xrandr:
+        for line in xrandr.splitlines():
+            match = re.match(r"^(\S+) connected(?: primary)?(?: (\d+x\d+[+-]\d+[+-]\d+))?", line)
+            if match:
+                displays.append({"name": match.group(1), "mode": match.group(2)})
+    wireless = []
+    net_root = Path("/sys/class/net")
+    for iface in network_devices():
+        if (net_root / iface["name"] / "wireless").exists() or (net_root / iface["name"] / "phy80211").exists():
+            wireless.append(iface["name"])
+    bluetooth_root = Path("/sys/class/bluetooth")
+    bluetooth = sorted(path.name for path in bluetooth_root.iterdir()) if bluetooth_root.exists() else []
+    pulse = run(["pactl", "info"])
+    wpctl = run(["wpctl", "status"])
+    return {
+        "schema_version": 1,
+        "system": {"architecture": platform.machine(), "kernel": platform.release()},
+        "cpu": cpu_info(),
+        "memory": memory_info(),
+        "graphics": devices,
+        "graphics_verification": graphics_verification,
+        "network": network_devices(),
+        "wireless": {"interfaces": wireless, "bluetooth_controllers": bluetooth, "rfkill": run(["rfkill", "list"] )},
+        "audio": {"pipewire_status": "responsive" if wpctl else ("tool_unavailable" if not shutil.which("wpctl") else "not_verified"), "pulse_server_status": "responsive" if pulse else ("tool_unavailable" if not shutil.which("pactl") else "not_verified")},
+        "storage": storage,
+        "displays": displays,
+        "verification_notes": [
+            "Hardware detection does not prove that every device function works.",
+            "GPU acceleration is marked verified only when the available OpenGL or Vulkan tool reports a usable device.",
+            "Firmware requirements are not inferred from device presence alone.",
+        ],
+    }
+
+
+def format_report(report):
+    cpu = report["cpu"]
+    mem = report["memory"]
+    lines = ["Ruist Detect — inventario de solo lectura", "", f"Sistema: {report['system']['architecture']} · kernel {report['system']['kernel']}", f"CPU: {cpu['model'] or 'no identificado'}", f"RAM total: {mem['total_bytes'] if mem['total_bytes'] is not None else 'desconocida'} bytes"]
+    lines += ["", "Gráficos:"]
+    if not report["graphics"]:
+        lines.append("  No se detectó una GPU PCI o no se pudo leer sysfs.")
+    for gpu in report["graphics"]:
+        lines.append(f"  {gpu['description']}")
+        lines.append(f"    controlador activo: {gpu['driver_active'] or 'ninguno detectado'}; módulos candidatos: {', '.join(gpu['driver_candidates']) or 'ninguno'}")
+    lines += ["", "Red:"]
+    lines += [f"  {item['name']}: {item['state'] or 'estado desconocido'}, controlador {item['driver_active'] or 'no identificado'}" for item in report["network"]] or ["  No se detectaron interfaces de red."]
+    lines += ["", f"Wi-Fi: {', '.join(report['wireless']['interfaces']) or 'sin interfaz identificada'}; Bluetooth: {', '.join(report['wireless']['bluetooth_controllers']) or 'sin controlador identificado'}"]
+    graphics = report["graphics_verification"]
+    lines += [f"Aceleración gráfica del sistema: OpenGL {graphics['opengl']}; Vulkan {graphics['vulkan']}"]
+    lines += [f"Audio: PipeWire {report['audio']['pipewire_status']}; servidor PulseAudio compatible {report['audio']['pulse_server_status']}"]
+    lines += ["", "Nota: inventario de solo lectura; detección no equivale a funcionalidad verificada."]
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--json", action="store_true", help="imprimir el informe estructurado en JSON")
+    args = parser.parse_args()
+    report = collect_report()
+    print(json.dumps(report, ensure_ascii=False, indent=2) if args.json else format_report(report))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

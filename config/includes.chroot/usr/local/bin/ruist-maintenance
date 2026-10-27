@@ -1,0 +1,26 @@
+#!/bin/sh
+# Safe, explicit system maintenance operations for Ruist Center.
+
+set -eu
+
+usage() {
+    echo "Uso: ruist-maintenance cleanup" >&2
+    exit 2
+}
+
+[ "$#" -eq 1 ] || usage
+
+case "$1" in
+    cleanup)
+        if [ "$(id -u)" -ne 0 ]; then
+            exec pkexec "$0" cleanup
+        fi
+        echo "APT mostrará los paquetes que propone eliminar y pedirá confirmación."
+        apt-get autoremove
+        apt-get clean
+        journalctl --vacuum-size=50M
+        ;;
+    *)
+        usage
+        ;;
+esac

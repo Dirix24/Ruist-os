@@ -2,7 +2,7 @@
 # Ruist Center - panel de control de Ruist OS (equivalente a MX Tools)
 
 while true; do
-    OPCION=$(zenity --list --title="Ruist Center" --width=420 --height=380 \
+    OPCION=$(zenity --list --title="Ruist Center" --width=420 --height=420 \
         --text="¿Qué quieres hacer?" --hide-header \
         --column="id" --column="Acción" --hide-column=1 \
         actualizar "Actualizar el sistema" \
@@ -10,7 +10,8 @@ while true; do
         drivers    "Drivers y componentes (NVIDIA, Wi-Fi...)" \
         rendimiento "Modo de rendimiento" \
         limpiar    "Limpiar el sistema" \
-        info       "Información del sistema" 2>/dev/null) || exit 0
+        info       "Información del sistema" \
+        hardware   "Inventario de hardware" 2>/dev/null) || exit 0
 
     case "$OPCION" in
         actualizar)
@@ -27,11 +28,18 @@ while true; do
                 equilibrado "Equilibrado (automático)" \
                 ahorro      "Ahorro de energía" 2>/dev/null) && ruist-perf "$MODO" ;;
         limpiar)
-            xfce4-terminal --hold -e "pkexec sh -c 'apt-get autoremove -y && apt-get clean && journalctl --vacuum-size=50M'" ;;
+            xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-maintenance cleanup" ;;
         info)
             zenity --text-info --title="Información del sistema" --width=520 --height=420 \
                 --filename=/dev/stdin <<EOF 2>/dev/null
 $(ruist-info)
+EOF
+            ;;
+        hardware)
+            INFORME=$(ruist-detect 2>&1)
+            zenity --text-info --title="Ruist Detect" --width=760 --height=560 \
+                --filename=/dev/stdin <<EOF 2>/dev/null
+$INFORME
 EOF
             ;;
     esac

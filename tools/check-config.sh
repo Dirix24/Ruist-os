@@ -19,6 +19,8 @@ for f in config/hooks/live/*.hook.chroot config/includes.chroot/usr/local/bin/*;
     case "$interprete" in
         *bash*) bash -n "$f" || fallo "sintaxis en $f" ;;
         *"/bin/sh"*|*" sh"*) sh -n "$f" || fallo "sintaxis en $f" ;;
+        *python3*) python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))' "$f" \
+            || fallo "sintaxis Python en $f" ;;
         *) fallo "shebang no reconocido o ausente en $f" ;;
     esac
     [ -x "$f" ] || fallo "$f no es ejecutable"
@@ -37,6 +39,9 @@ while IFS= read -r -d '' f; do
 done < <(find config -type f -name '*.json' -print0)
 
 echo "Comprobando listas de paquetes..."
+if ! find config/package-lists -maxdepth 1 -type f -name '*.list.chroot' -print -quit | grep -q .; then
+    fallo "no hay listas *.list.chroot en config/package-lists"
+fi
 for f in config/package-lists/*.list.chroot; do
     [ -f "$f" ] || continue
     if awk '/^[[:space:]]*#/ || /^[[:space:]]*$/ { next }

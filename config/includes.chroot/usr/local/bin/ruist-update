@@ -8,16 +8,12 @@ echo "=========================="
 echo
 
 echo "Actualizando información de paquetes..."
-apt update
+apt-get update
 
 echo
 echo "Actualizando Ruist OS..."
-apt full-upgrade -y
-
-echo
-echo "Limpieza..."
-apt autoremove -y
-apt clean
+echo "Revisa la lista de cambios y confirma la actualización cuando apt-get lo solicite."
+apt-get full-upgrade
 
 echo
 echo "Ruist OS está actualizado."

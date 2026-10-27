@@ -23,7 +23,11 @@ Versión actual: **0.2 "Genesis"**.
 | `ruist-software` | Tienda de programas: Flathub, búsqueda en Flathub, programas de Debian y Synaptic |
 | `ruist-perf` | Modo de rendimiento: `rendimiento`, `equilibrado`, `ahorro`, `estado` |
 | `ruist-update` | Actualiza el sistema con apt |
+| `ruist-maintenance cleanup` | Mantenimiento con confirmación de APT antes de retirar paquetes |
 | `ruist-info` | Logo de Ruist OS y características del equipo (fastfetch) |
+| `ruist-detect` | Inventario de hardware de solo lectura; `--json` ofrece datos estructurados |
+
+`ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
 
 ## Estructura
 
@@ -56,6 +60,14 @@ tools/check-config.sh
 sudo rm -rf .build chroot binary cache
 mkdir -p .build && touch .build/config
 sudo lb build
+```
+
+Para comprobar la configuración y ejecutar las pruebas sin red ni permisos de root:
+
+```sh
+tools/check-config.sh
+tests/check-config.sh
+python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 Notas importantes:

@@ -39,3 +39,7 @@ config-backup-*/
 # Temporales
 *.tmp
 *~
+
+# Python bytecode
+__pycache__/
+*.py[cod]
