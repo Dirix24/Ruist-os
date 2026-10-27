@@ -55,7 +55,7 @@ branding/
 
 ## Compilar la ISO
 
-La forma recomendada es GitHub Actions: **Actions → Compilar ISO de Ruist OS → Run workflow**. Primero se ejecutan las comprobaciones y, si pasan, se compila y se publica la ISO como artefacto. También se recompila cada domingo.
+La forma recomendada es GitHub Actions: **Actions → Compilar ISO de Ruist OS → Run workflow**. Las comprobaciones se ejecutan también en cada push y pull request; la ISO se construye cuando se inicia manualmente el workflow o cada domingo, si pasan todas las comprobaciones.
 
 A mano, en un Debian trixie con permisos de root:
 

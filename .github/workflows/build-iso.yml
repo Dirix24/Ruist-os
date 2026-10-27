@@ -1,6 +1,8 @@
 name: Compilar ISO de Ruist OS
 
 on:
+  push:
+  pull_request:
   workflow_dispatch:
   schedule:
     # Cada domingo, para que la ISO salga siempre con paquetes recientes
@@ -37,6 +39,7 @@ jobs:
 
   build:
     needs: check
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     container:
