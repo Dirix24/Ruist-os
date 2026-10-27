@@ -9,9 +9,9 @@ Versión actual: **0.2 "Genesis"**.
 - **Escritorio:** XFCE sin Wayland, tema Arc-Dark, iconos Papirus-Dark, panel fino.
 - **Navegador:** Brave por defecto, con Rewards, Wallet, VPN y asistente de IA desactivados.
 - **Rendimiento:** zram, ajustes de memoria y red, planificador de disco según el tipo de disco, CPU al máximo con corriente y en ahorro con batería (TLP). `ruist-perf` cambia de modo a mano.
-- **Desarrollo:** gcc, clang, cmake, ninja, gdb, git, Python, Node y librerías de SDL2, GLFW, Vulkan y OpenAL.
-- **Juegos:** gamemode, mangohud, Vulkan y Mesa. Steam y Wine desde la tienda.
-- **Diseño y 3D:** Blender, GIMP e Inkscape (lista `ruist-creative`, se puede borrar para una ISO más ligera).
+- **Desarrollo:** perfil opcional con gcc, clang, cmake, ninja, gdb, Git, Python, Node y bibliotecas SDL2, GLFW, Vulkan y OpenAL.
+- **Juegos:** perfil opcional con GameMode, MangoHud, Lutris, Steam y Wine; habilita i386 para Steam cuando hace falta.
+- **Diseño y 3D:** perfil opcional con FreeCAD, OpenSCAD, Blender, GIMP e Inkscape.
 - **Instalador:** Calamares instala la base incluida en la ISO sin exigir conexión; las actualizaciones se hacen después desde Ruist Update.
 
 ## Herramientas propias
@@ -31,7 +31,7 @@ Versión actual: **0.2 "Genesis"**.
 
 `ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
 
-Los perfiles `universal`, `gaming`, `development`, `architecture` y `productivity` son opcionales. Se pueden combinar con `ruist-profile install gaming development`; la tienda pide confirmación a APT. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza.
+Los perfiles `universal`, `gaming`, `development`, `architecture` y `productivity` son opcionales y no se incluyen en la ISO base. Se pueden combinar con `ruist-profile install gaming development`; APT muestra los cambios y pide confirmación. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza. Si Gaming instala Steam, habilita i386 para descargar sus bibliotecas de 32 bits; esa arquitectura se conserva para que otros programas i386 sigan funcionando.
 
 ### Escritorio y límite conocido
 
@@ -41,9 +41,10 @@ Los perfiles `universal`, `gaming`, `development`, `architecture` y `productivit
 
 ```
 config/
-  package-lists/        Paquetes que lleva la ISO (una lista por tema)
+  package-lists/        Paquetes de la ISO base
   hooks/live/           Scripts que se ejecutan al construir la ISO (Brave, limpieza, Flathub...)
   includes.chroot/      Archivos que se copian tal cual al sistema (/etc, /usr/local/bin...)
+    usr/share/ruist/profiles/  Catálogos opcionales para Ruist Profile
   archives/             Repositorios de apt
 tools/
   check-config.sh       Comprueba sintaxis, XML y JSON (sin red)

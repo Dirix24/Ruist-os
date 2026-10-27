@@ -1,5 +1,8 @@
-# Gaming y diagnóstico; Steam se instala aparte porque requiere habilitar i386
+# Gaming opcional; el instalador habilita i386 cuando se selecciona Steam
 gamemode
 mangohud
-vulkan-tools
+libgamemode0
 lutris
+steam-installer
+wine
+libsdl2-2.0-0

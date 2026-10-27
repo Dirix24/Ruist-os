@@ -3,6 +3,7 @@ import json
 from importlib.machinery import SourceFileLoader
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -41,6 +42,22 @@ class RuistProfileTests(unittest.TestCase):
         self.write_profile("gaming", "gamemode;touch /tmp/injected\n")
         with self.assertRaises(ValueError):
             profile.load_manifest("gaming")
+
+    def test_steam_enables_i386_and_refreshes_apt_indexes(self):
+        with patch.object(profile.subprocess, "run", side_effect=[
+            SimpleNamespace(returncode=0, stdout=""),
+            SimpleNamespace(returncode=0),
+        ]) as dpkg, patch.object(profile, "run_apt", return_value=0) as apt:
+            self.assertEqual(profile.prepare_steam_architecture(), 0)
+        self.assertEqual(dpkg.call_args_list[1].args[0], ["dpkg", "--add-architecture", "i386"])
+        apt.assert_called_once_with("update", [])
+
+    def test_existing_i386_architecture_is_not_changed(self):
+        with patch.object(profile.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="i386\n")) as dpkg, \
+                patch.object(profile, "run_apt") as apt:
+            self.assertEqual(profile.prepare_steam_architecture(), 0)
+        dpkg.assert_called_once()
+        apt.assert_not_called()
 
     def test_install_records_only_missing_packages_as_owned(self):
         with patch.object(profile, "installed", side_effect=lambda pkg: pkg == "gamemode"), \
