@@ -1,0 +1,5 @@
+# Gaming y diagnóstico; Steam se instala aparte porque requiere habilitar i386
+gamemode
+mangohud
+vulkan-tools
+lutris

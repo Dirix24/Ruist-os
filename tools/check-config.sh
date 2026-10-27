@@ -42,7 +42,7 @@ echo "Comprobando listas de paquetes..."
 if ! find config/package-lists -maxdepth 1 -type f -name '*.list.chroot' -print -quit | grep -q .; then
     fallo "no hay listas *.list.chroot en config/package-lists"
 fi
-for f in config/package-lists/*.list.chroot; do
+for f in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot; do
     [ -f "$f" ] || continue
     if awk '/^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
             /[[:space:]]/ { found=1; exit }
@@ -54,10 +54,23 @@ done
 echo "Comprobando archivos obligatorios..."
 for f in config/bootstrap config/chroot config/binary config/common config/source \
          config/archives/debian.list.chroot \
-         config/includes.chroot/etc/calamares/settings.conf; do
+         config/includes.chroot/etc/calamares/settings.conf \
+         config/includes.chroot/etc/calamares/modules/packages.conf \
+         config/includes.chroot/usr/share/ruist/profiles/universal.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/gaming.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/development.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/architecture.list.chroot \
+         config/includes.chroot/usr/share/ruist/profiles/productivity.list.chroot; do
     [ -f "$f" ] || fallo "falta $f"
 done
 [ -d config/package-lists ] || fallo "falta el directorio config/package-lists"
+
+echo "Comprobando instalación offline de Calamares..."
+for clave in update_db update_system; do
+    if ! grep -Eq "^[[:space:]]*$clave:[[:space:]]*false([[:space:]]*(#.*)?)?$" config/includes.chroot/etc/calamares/modules/packages.conf; then
+        fallo "packages.conf debe mantener $clave: false para permitir la instalación esencial offline"
+    fi
+done
 
 if [ "$ERRORES" -gt 0 ]; then
     printf 'Se han encontrado %s problema(s).\n' "$ERRORES"

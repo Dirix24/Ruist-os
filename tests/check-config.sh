@@ -10,14 +10,23 @@ FIXTURE="$TEMP/repo"
 mkdir -p "$FIXTURE/tools" "$FIXTURE/scripts" \
     "$FIXTURE/config/package-lists" \
     "$FIXTURE/config/archives" \
-    "$FIXTURE/config/includes.chroot/etc/calamares"
+    "$FIXTURE/config/includes.chroot/etc/calamares/modules" \
+    "$FIXTURE/config/includes.chroot/usr/share/ruist/profiles"
 cp "$ROOT/tools/check-config.sh" "$FIXTURE/tools/check-config.sh"
 cp "$ROOT/scripts/check-config.sh" "$FIXTURE/scripts/check-config.sh"
 touch "$FIXTURE/config/bootstrap" "$FIXTURE/config/chroot" \
     "$FIXTURE/config/binary" "$FIXTURE/config/common" \
     "$FIXTURE/config/source" \
     "$FIXTURE/config/archives/debian.list.chroot" \
-    "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf"
+    "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf" \
+    "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf"
+cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf" <<'EOF'
+update_db: false
+update_system: false
+EOF
+for profile in universal gaming development architecture productivity; do
+    touch "$FIXTURE/config/includes.chroot/usr/share/ruist/profiles/$profile.list.chroot"
+done
 
 printf 'bash\n' > "$FIXTURE/config/package-lists/base.list.chroot"
 

@@ -1,0 +1,235 @@
+#!/usr/bin/python3
+"""Install and reverse optional Ruist OS application profiles."""
+
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+PROFILE_DIR = Path("/usr/share/ruist/profiles")
+STATE_DIR = Path("/var/lib/ruist/profiles")
+PROFILE_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
+
+
+def available_profiles():
+    return sorted(path.name.removesuffix(".list.chroot") for path in PROFILE_DIR.glob("*.list.chroot"))
+
+
+def validate_profile(name):
+    if not PROFILE_RE.fullmatch(name) or name not in available_profiles():
+        raise ValueError(f"Perfil desconocido: {name}")
+    return name
+
+
+def load_manifest(name):
+    validate_profile(name)
+    path = PROFILE_DIR / f"{name}.list.chroot"
+    packages = []
+    for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        package = raw.strip()
+        if not package or package.startswith("#"):
+            continue
+        if not PACKAGE_RE.fullmatch(package):
+            raise ValueError(f"Paquete no válido en {path.name}:{line_number}: {package}")
+        if package not in packages:
+            packages.append(package)
+    if not packages:
+        raise ValueError(f"El perfil {name} no contiene paquetes")
+    return packages
+
+
+def installed(package):
+    result = subprocess.run(
+        ["dpkg-query", "-W", "-f=${db:Status-Status}", package],
+        text=True, capture_output=True, check=False,
+    )
+    return result.returncode == 0 and result.stdout.strip() == "installed"
+
+
+def run_apt(action, packages):
+    log_operation(f"apt-get {action}: {' '.join(packages)}")
+    status = subprocess.run(["apt-get", action, *packages], check=False).returncode
+    log_operation(f"apt-get {action} terminó con estado {status}")
+    return status
+
+
+def log_operation(message):
+    try:
+        with Path("/var/log/ruist-profile.log").open("a", encoding="utf-8") as stream:
+            stream.write(f"{datetime.now(timezone.utc).isoformat()} {message}\n")
+    except OSError as error:
+        print(f"No se pudo escribir el registro de Ruist Profile: {error}", file=sys.stderr)
+
+
+def state_path(name):
+    validate_profile(name)
+    return STATE_DIR / f"{name}.json"
+
+
+def read_state(name):
+    path = state_path(name)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Registro dañado para el perfil {name}: {error}") from error
+    if not isinstance(data, dict) or not isinstance(data.get("active"), list) or not isinstance(data.get("owned"), list):
+        raise ValueError(f"Registro inválido para el perfil {name}")
+    if any(not isinstance(pkg, str) or not PACKAGE_RE.fullmatch(pkg) for pkg in data["active"] + data["owned"]):
+        raise ValueError(f"El registro de {name} contiene nombres de paquete no válidos")
+    return data
+
+
+def write_state(name, data):
+    STATE_DIR.mkdir(mode=0o755, parents=True, exist_ok=True)
+    path = state_path(name)
+    fd, temp_name = tempfile.mkstemp(prefix=f".{name}.", dir=STATE_DIR, text=True)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(data, stream, ensure_ascii=False, sort_keys=True)
+            stream.write("\n")
+        os.chmod(temp_name, 0o644)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
+
+
+def install_profiles(names):
+    manifests = {name: load_manifest(name) for name in names}
+    prior = {name: read_state(name) for name in names}
+    packages = sorted({package for manifest in manifests.values() for package in manifest})
+    missing = [package for package in packages if not installed(package)]
+    if missing:
+        print("APT mostrará los cambios y pedirá confirmación antes de instalar.")
+        if run_apt("install", missing) != 0:
+            return 1
+
+    owner = {}
+    for name in names:
+        for package in manifests[name]:
+            if package in missing and package not in owner:
+                owner[package] = name
+    for name in names:
+        old_owned = set(prior[name]["owned"]) if prior[name] else set()
+        active = manifests[name]
+        owned = sorted((old_owned & set(active)) | {package for package, owner_name in owner.items() if owner_name == name})
+        write_state(name, {"version": 1, "active": active, "owned": owned})
+    return 0
+
+
+def remove_profile(name):
+    state = read_state(name)
+    if state is None:
+        print(f"El perfil {name} no tiene registro de instalación.")
+        return 1
+
+    transfers = {}
+    removals = []
+    for package in state["owned"]:
+        if not installed(package):
+            continue
+        owners = []
+        for other in available_profiles():
+            if other == name:
+                continue
+            other_state = read_state(other)
+            if other_state and package in other_state["active"]:
+                owners.append(other)
+        if owners:
+            new_owner = sorted(owners)[0]
+            other_state = read_state(new_owner)
+            other_state["owned"] = sorted(set(other_state["owned"]) | {package})
+            transfers[new_owner] = other_state
+        else:
+            removals.append(package)
+
+    if removals:
+        print("APT mostrará las dependencias afectadas y pedirá confirmación antes de retirar paquetes.")
+        if run_apt("remove", sorted(removals)) != 0:
+            return 1
+    for other, other_state in transfers.items():
+        write_state(other, other_state)
+    state_path(name).unlink(missing_ok=True)
+    print(f"Perfil {name} desactivado. Las dependencias compartidas se conservan.")
+    return 0
+
+
+def profile_menu():
+    profiles = available_profiles()
+    if not profiles:
+        print("No hay perfiles instalables.", file=sys.stderr)
+        return 1
+    action = subprocess.run([
+        "zenity", "--list", "--title=Perfiles Ruist", "--text=Elige una acción",
+        "--hide-header", "--column=id", "--column=Acción", "--hide-column=1",
+        "install", "Instalar perfiles", "remove", "Desactivar un perfil",
+    ], text=True, capture_output=True, check=False)
+    if action.returncode != 0 or action.stdout.strip() not in ("install", "remove"):
+        return 0
+    choices = []
+    for name in profiles:
+        state = read_state(name)
+        choices.extend(["TRUE" if state else "FALSE", name, name.capitalize()])
+    selected = subprocess.run([
+        "zenity", "--list", "--checklist", "--title=Perfiles Ruist", "--text=Selecciona uno o más perfiles",
+        "--hide-header", "--column=", "--column=id", "--column=Perfil", "--hide-column=2", "--separator= ",
+        *choices,
+    ], text=True, capture_output=True, check=False)
+    if selected.returncode != 0:
+        return 0
+    names = selected.stdout.split()
+    try:
+        names = [validate_profile(name) for name in names]
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    if not names:
+        return 0
+    action_name = action.stdout.strip()
+    if action_name == "remove" and len(names) > 1:
+        print("Desactiva un perfil cada vez para revisar cada operación.", file=sys.stderr)
+        return 2
+    confirm_text = "Se instalarán: " + ", ".join(names) if action_name == "install" else "Se desactivará: " + ", ".join(names)
+    confirm = subprocess.run(["zenity", "--question", "--title=Confirmar perfiles", f"--text={confirm_text}"], check=False)
+    if confirm.returncode != 0:
+        return 0
+    return subprocess.run([
+        "xfce4-terminal", "--hold", "--execute", "pkexec", "/usr/local/bin/ruist-profile", action_name, *names,
+    ], check=False).returncode
+
+
+def main(argv=None):
+    args = list(sys.argv[1:] if argv is None else argv)
+    if not args:
+        return profile_menu()
+    if args == ["list"]:
+        for name in available_profiles():
+            print(name)
+        return 0
+    action = args.pop(0)
+    if action not in ("install", "remove") or not args:
+        print("Uso: ruist-profile [list | install PERFIL... | remove PERFIL]", file=sys.stderr)
+        return 2
+    try:
+        names = [validate_profile(name) for name in args]
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    if action == "remove" and len(names) != 1:
+        print("La desactivación se hace un perfil cada vez.", file=sys.stderr)
+        return 2
+    if os.geteuid() != 0:
+        return subprocess.run(["pkexec", "/usr/local/bin/ruist-profile", action, *names], check=False).returncode
+    return install_profiles(names) if action == "install" else remove_profile(names[0])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

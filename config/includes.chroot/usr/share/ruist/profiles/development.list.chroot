@@ -1,0 +1,10 @@
+# Herramientas de desarrollo opcionales
+build-essential
+git
+cmake
+ninja-build
+clang
+gdb
+python3-venv
+nodejs
+npm

@@ -2,7 +2,7 @@
 # Ruist Center - panel de control de Ruist OS (equivalente a MX Tools)
 
 while true; do
-    OPCION=$(zenity --list --title="Ruist Center" --width=420 --height=460 \
+    OPCION=$(zenity --list --title="Ruist Center" --width=420 --height=500 \
         --text="¿Qué quieres hacer?" --hide-header \
         --column="id" --column="Acción" --hide-column=1 \
         actualizar "Actualizar el sistema" \
@@ -12,6 +12,7 @@ while true; do
         limpiar    "Limpiar el sistema" \
         info       "Información del sistema" \
         escritorio "Configuración del escritorio" \
+        perfiles   "Perfiles de aplicaciones" \
         hardware   "Inventario de hardware" 2>/dev/null) || exit 0
 
     case "$OPCION" in
@@ -45,5 +46,7 @@ EOF
             ;;
         escritorio)
             ruist-desktop ;;
+        perfiles)
+            ruist-profile ;;
     esac
 done

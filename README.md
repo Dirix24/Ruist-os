@@ -12,7 +12,7 @@ Versión actual: **0.2 "Genesis"**.
 - **Desarrollo:** gcc, clang, cmake, ninja, gdb, git, Python, Node y librerías de SDL2, GLFW, Vulkan y OpenAL.
 - **Juegos:** gamemode, mangohud, Vulkan y Mesa. Steam y Wine desde la tienda.
 - **Diseño y 3D:** Blender, GIMP e Inkscape (lista `ruist-creative`, se puede borrar para una ISO más ligera).
-- **Instalador:** Calamares, que actualiza el sistema al instalar si hay internet.
+- **Instalador:** Calamares instala la base incluida en la ISO sin exigir conexión; las actualizaciones se hacen después desde Ruist Update.
 
 ## Herramientas propias
 
@@ -27,8 +27,11 @@ Versión actual: **0.2 "Genesis"**.
 | `ruist-info` | Logo de Ruist OS y características del equipo (fastfetch) |
 | `ruist-detect` | Inventario de hardware de solo lectura; `--json` ofrece datos estructurados |
 | `ruist-desktop` | Abre los ajustes nativos de fondo, iconos, tema, efectos y pantallas de XFCE |
+| `ruist-profile` | Instala perfiles APT combinables y permite retirar solo paquetes que instaló el perfil |
 
 `ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
+
+Los perfiles `universal`, `gaming`, `development`, `architecture` y `productivity` son opcionales. Se pueden combinar con `ruist-profile install gaming development`; la tienda pide confirmación a APT. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza.
 
 ### Escritorio y límite conocido
 
