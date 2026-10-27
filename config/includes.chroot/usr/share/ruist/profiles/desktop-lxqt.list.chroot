@@ -1,0 +1,3 @@
+# Escritorio LXQt opcional; se instala junto a XFCE y se elige al iniciar sesión
+lxqt
+qterminal

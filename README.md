@@ -32,7 +32,7 @@ Versión actual: **0.2 "Genesis"**.
 
 `ruist-detect` usa sysfs y `/proc` para el inventario básico. `lspci`/`modinfo`, `glxinfo`, `vulkaninfo`, `lsblk`, `xrandr`, `wpctl` y `pactl` añaden detalles cuando están disponibles. La falta de una herramienta se muestra como no verificada; el inventario no instala ni cambia controladores y no infiere fallos de firmware solo por detectar un dispositivo.
 
-Los perfiles `universal`, `gaming`, `development`, `architecture`, `productivity`, `desktop-plasma` y `desktop-lxqt` son opcionales y no se incluyen en la ISO base. Se pueden combinar con `ruist-profile install gaming development`; APT muestra los cambios y pide confirmación. Plasma y LXQt se instalan después junto a XFCE; la sesión se elige en la pantalla de inicio. Así la base de Calamares sigue instalándose sin Internet. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza. Si Gaming instala Steam, habilita i386 para descargar sus bibliotecas de 32 bits; esa arquitectura se conserva para que otros programas i386 sigan funcionando.
+Los perfiles `universal`, `gaming`, `development`, `architecture`, `productivity`, `desktop-plasma` y `desktop-lxqt` son opcionales y no se incluyen en la ISO base. Se pueden combinar con `ruist-profile install gaming development`; APT muestra los cambios y pide confirmación. Calamares ofrece XFCE (incluido en la ISO), Plasma o LXQt después de instalar la base. Plasma y LXQt requieren Internet en ese paso; si no hay conexión, se conserva XFCE y se pueden añadir después desde Ruist Center. `ruist-profile remove gaming` solo propone retirar paquetes que el propio perfil instaló y conserva paquetes compartidos por otros perfiles. Las dependencias quedan instaladas y se pueden revisar con APT antes de cualquier limpieza. Si Gaming instala Steam, habilita i386 para descargar sus bibliotecas de 32 bits; esa arquitectura se conserva para que otros programas i386 sigan funcionando.
 
 `ruist-kernel` solo ofrece el metapaquete estable de Debian para amd64/i386. Instalarlo no elimina versiones anteriores: GRUB conserva esas entradas como alternativa de arranque. No ofrece kernels externos ni promete mejoras de rendimiento.
 
@@ -104,11 +104,11 @@ Si el sistema pide contraseña para una acción de administrador, también vale 
 
 Al instalar con Calamares, el usuario y la contraseña los eliges tú durante la instalación.
 
-La configuración de Calamares no actualiza índices APT durante la instalación (`update_db: false`, `update_system: false`), por lo que requiere que la ISO incluya las dependencias base. Los perfiles de aplicaciones y escritorios alternativos se instalan desde Ruist Center después y necesitan conexión si los paquetes no están en caché.
+La instalación base de Calamares no actualiza índices APT y funciona sin conexión (`update_db: false`, `update_system: false`). La etapa opcional actualiza índices solo si hay Internet; sin conexión se omite y queda instalado XFCE. Los perfiles de aplicaciones se instalan desde Ruist Center después y necesitan conexión si los paquetes no están en caché.
 
 ## Hoja de ruta
 
-- Completar la selección de escritorio y perfiles en Calamares manteniendo el flujo base offline.
+- Añadir selección de perfiles de aplicaciones en Calamares y registrar su propiedad para que sigan siendo reversibles.
 - Resolver técnicamente el centrado de iconos movibles en Xfdesktop.
 - Reemplazar el logo actual por el archivo final que entregue el propietario.
 - Construir la ISO y probarla en una máquina virtual y en el portátil (ASUS X550LC); medir memoria en reposo.

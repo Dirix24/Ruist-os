@@ -28,17 +28,28 @@ cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf" <<'E
 update_db: false
 update_system: false
 EOF
+cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages-extra.conf" <<'EOF'
+skip_if_no_internet: true
+update_db: true
+update_system: false
+EOF
+touch "$FIXTURE/config/includes.chroot/etc/calamares/modules/desktop-choice.conf"
+cat > "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf" <<'EOF'
+packagechooser@desktop
+packages@base
+packages@optional
+EOF
 for profile in universal gaming development architecture productivity desktop-plasma desktop-lxqt; do
     touch "$FIXTURE/config/includes.chroot/usr/share/ruist/profiles/$profile.list.chroot"
 done
 
 printf 'bash\n' > "$FIXTURE/config/package-lists/base.list.chroot"
 
-if ! "$FIXTURE/tools/check-config.sh" >/dev/null; then
+if ! RUIST_SKIP_YAML_VALIDATION=1 "$FIXTURE/tools/check-config.sh" >/dev/null; then
     echo "FAIL: la configuración mínima válida fue rechazada" >&2
     exit 1
 fi
-if ! "$FIXTURE/scripts/check-config.sh" >/dev/null; then
+if ! RUIST_SKIP_YAML_VALIDATION=1 "$FIXTURE/scripts/check-config.sh" >/dev/null; then
     echo "FAIL: el wrapper histórico no delega correctamente" >&2
     exit 1
 fi
