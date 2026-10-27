@@ -1,32 +1,65 @@
 #!/bin/sh
 # ruist-drivers - gestor de drivers y firmware (equivalente a los de MX Linux)
 # Sin argumentos abre la interfaz gráfica.
-# Como root: "nvidia PAQUETE", "quitar-nvidia" o "paquetes PAQUETE..."
+# Las instalaciones se confirman en APT. Como root admite solo acciones y paquetes
+# de la lista permitida; no ejecuta nombres de paquete como comandos.
 
-if [ "$(id -u)" -eq 0 ] && [ -n "$1" ]; then
-    export DEBIAN_FRONTEND=noninteractive
+set -f
+
+if [ "$(id -u)" -eq 0 ] && [ -n "${1:-}" ]; then
+    set -eu
     ACCION="$1"
     shift
     case "$ACCION" in
         nvidia)
+            [ "$#" -eq 1 ] || { echo "Uso: ruist-drivers nvidia PAQUETE" >&2; exit 2; }
+            case "$1" in
+                nvidia-driver|nvidia-[a-z0-9.+-]*-driver) ;;
+                *) echo "El paquete no parece un controlador NVIDIA recomendado: $1" >&2; exit 2 ;;
+            esac
             apt-get update
-            apt-get install -y linux-headers-amd64 dkms firmware-misc-nonfree "$@"
+            apt-get install linux-headers-amd64 dkms "$1"
             echo
             echo "Listo. Reinicia el equipo para usar el driver NVIDIA." ;;
         quitar-nvidia)
-            apt-get purge -y '^nvidia-.*' 'libnvidia-.*' 'xserver-xorg-video-nvidia.*' || true
-            apt-get autoremove -y
+            [ "$#" -eq 0 ] || { echo "Uso: ruist-drivers quitar-nvidia" >&2; exit 2; }
+            apt-get purge '^nvidia-.*' 'libnvidia-.*' 'xserver-xorg-video-nvidia.*'
+            apt-get autoremove
             echo
             echo "Driver NVIDIA eliminado. Reinicia para volver al driver libre (nouveau)." ;;
         paquetes)
+            [ "$#" -gt 0 ] || { echo "Indica los paquetes de firmware o controlador." >&2; exit 2; }
+            INTEL_MICROCODE=0
+            AMD_MICROCODE=0
+            for paquete in "$@"; do
+                case "$paquete" in
+                    broadcom-sta-dkms|firmware-iwlwifi|firmware-atheros|firmware-realtek|firmware-misc-nonfree|intel-microcode|amd64-microcode|firmware-amd-graphics|printer-driver-all|hplip) ;;
+                    *) echo "Paquete de controlador fuera de la lista permitida: $paquete" >&2; exit 2 ;;
+                esac
+                [ "$paquete" = intel-microcode ] && INTEL_MICROCODE=1
+                [ "$paquete" = amd64-microcode ] && AMD_MICROCODE=1
+            done
+            if [ "$INTEL_MICROCODE" -eq 1 ] && [ "$AMD_MICROCODE" -eq 1 ]; then
+                echo "No se pueden instalar microcódigos Intel y AMD en la misma operación." >&2
+                exit 2
+            fi
             apt-get update
-            # Los drivers que se compilan con dkms necesitan las cabeceras del kernel
-            apt-get install -y linux-headers-amd64 dkms "$@"
+            case " $* " in
+                *" broadcom-sta-dkms "*) apt-get install linux-headers-amd64 dkms "$@" ;;
+                *) apt-get install "$@" ;;
+            esac
             echo
             echo "Listo. Si algo no aparece todavía, reinicia el equipo." ;;
+        *)
+            echo "Uso: ruist-drivers [nvidia PAQUETE | quitar-nvidia | paquetes PAQUETE...]" >&2
+            exit 2 ;;
     esac
     exit 0
 fi
+
+run_privileged() {
+    xfce4-terminal --hold --execute pkexec /usr/local/bin/ruist-drivers "$@"
+}
 
 menu_nvidia() {
     if ! command -v nvidia-detect >/dev/null 2>&1; then
@@ -61,9 +94,11 @@ Driver recomendado: ${PAQUETE:-ninguno disponible en Debian para esta tarjeta}"
                     --text="Debian no ofrece un driver propietario para esta tarjeta. Se seguirá usando nouveau." 2>/dev/null
                 return
             fi
-            xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-drivers nvidia $PAQUETE" ;;
+            zenity --question --title="Driver NVIDIA propietario" --width=460 \
+                --text="Se instalará $PAQUETE desde los repositorios APT configurados. La operación requiere Internet y puede necesitar un reinicio." 2>/dev/null || return
+            run_privileged nvidia "$PAQUETE" ;;
         quitar)
-            xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-drivers quitar-nvidia" ;;
+            run_privileged quitar-nvidia ;;
     esac
 }
 
@@ -81,7 +116,10 @@ menu_componentes() {
         FALSE firmware-amd-graphics "Firmware de gráficos AMD" \
         FALSE printer-driver-all   "Impresoras (drivers generales)" \
         FALSE hplip                "Impresoras y escáneres HP" 2>/dev/null) || return
-    [ -n "$SEL" ] && xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-drivers paquetes $SEL"
+    if [ -n "$SEL" ]; then
+        set -- $SEL
+        run_privileged paquetes "$@"
+    fi
 }
 
 while true; do
