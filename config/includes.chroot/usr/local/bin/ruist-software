@@ -6,33 +6,58 @@
 # Como root, "apt PAQUETE..." instala paquetes de Debian ("steam" configura i386).
 
 FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
+set -f
 
-if [ "$(id -u)" -eq 0 ] && [ "$1" = "apt" ]; then
+valid_flatpak_id() {
+    case "$1" in
+        ""|-*|.*|*.|*..*|*[!A-Za-z0-9._-]*) return 1 ;;
+        *.*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+valid_apt_package() {
+    case "$1" in
+        steam|wine|obs-studio|vlc|audacity|krita|kdenlive|libreoffice|lutris|simplescreenrecorder) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+if [ "$(id -u)" -eq 0 ] && [ "${1:-}" = "apt" ]; then
     shift
     for item in "$@"; do
+        if ! valid_apt_package "$item"; then
+            echo "Paquete fuera del catálogo de Ruist Store: $item" >&2
+            exit 2
+        fi
         case "$item" in
             steam)
                 dpkg --add-architecture i386
                 apt-get update
-                apt-get install -y steam-installer ;;
-            *) apt-get install -y "$item" ;;
+                apt-get install steam-installer ;;
+            *) apt-get install "$item" ;;
         esac
     done
     exit 0
 fi
 
 # Instalar un Flatpak de Flathub para el usuario (sin pedir contraseña)
-if [ "$1" = "flatpak" ]; then
+if [ "${1:-}" = "flatpak" ]; then
     shift
+    [ "$#" -gt 0 ] || { echo "Indica al menos una aplicación Flatpak." >&2; exit 2; }
     flatpak remote-add --user --if-not-exists flathub "$FLATHUB_URL"
     for id in "$@"; do
-        flatpak install --user -y flathub "$id"
+        if ! valid_flatpak_id "$id"; then
+            echo "Identificador Flatpak inválido: $id" >&2
+            exit 2
+        fi
+        flatpak install --user flathub "$id"
     done
     exit 0
 fi
 
 terminal() {
-    xfce4-terminal --hold -e "$1"
+    xfce4-terminal --hold --execute "$@"
 }
 
 menu_apt() {
@@ -49,7 +74,10 @@ menu_apt() {
         FALSE libreoffice  "LibreOffice (ofimática)" \
         FALSE lutris       "Lutris (gestor de juegos)" \
         FALSE simplescreenrecorder "SimpleScreenRecorder (grabar pantalla)" 2>/dev/null) || return
-    [ -n "$SEL" ] && terminal "pkexec /usr/local/bin/ruist-software apt $SEL"
+    if [ -n "$SEL" ]; then
+        set -- $SEL
+        terminal pkexec /usr/local/bin/ruist-software apt "$@"
+    fi
 }
 
 menu_flathub() {
@@ -68,7 +96,10 @@ menu_flathub() {
         FALSE org.godotengine.Godot            "Godot (motor de videojuegos)" \
         FALSE org.blender.Blender              "Blender (última versión)" \
         FALSE com.obsproject.Studio            "OBS Studio" 2>/dev/null) || return
-    [ -n "$SEL" ] && terminal "/usr/local/bin/ruist-software flatpak $SEL"
+    if [ -n "$SEL" ]; then
+        set -- $SEL
+        terminal /usr/local/bin/ruist-software flatpak "$@"
+    fi
 }
 
 menu_buscar() {
@@ -84,7 +115,10 @@ menu_buscar() {
         zenity --list --checklist --title="Resultados" --width=700 --height=480 \
         --column="" --column="id" --column="Programa" --column="Descripción" \
         --hide-column=2 --separator=" " 2>/dev/null) || return
-    [ -n "$SEL" ] && terminal "/usr/local/bin/ruist-software flatpak $SEL"
+    if [ -n "$SEL" ]; then
+        set -- $SEL
+        terminal /usr/local/bin/ruist-software flatpak "$@"
+    fi
 }
 
 while true; do
