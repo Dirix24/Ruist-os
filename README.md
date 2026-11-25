@@ -6,7 +6,7 @@ Versión actual: **0.2 "Genesis"**.
 
 ## Qué incluye
 
-- **Escritorio:** XFCE sin Wayland, tema Arc-Dark, iconos Papirus-Dark, panel fino.
+- **Escritorio:** XFCE sobre X11 con Plank, barra superior translúcida, tema Arc-Dark e iconos Papirus-Dark.
 - **Navegador:** Firefox ESR desde Debian Trixie, con localización en español.
 - **Rendimiento:** zram, ajustes de memoria y red, planificador de disco según el tipo de disco, CPU al máximo con corriente y en ahorro con batería (TLP). `ruist-perf` cambia de modo a mano.
 - **Desarrollo:** perfil opcional con gcc, clang, cmake, ninja, gdb, Git, Python, Node y bibliotecas SDL2, GLFW, Vulkan y OpenAL.

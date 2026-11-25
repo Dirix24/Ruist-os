@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Plank
+Exec=/usr/local/bin/ruist-plank
+TryExec=plank
+OnlyShowIn=XFCE;

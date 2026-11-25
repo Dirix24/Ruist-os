@@ -41,3 +41,6 @@ zenity
 # Navegador estable de Debian
 firefox-esr
 firefox-esr-l10n-es-es
+
+# Dock de la sesión XFCE/X11
+plank

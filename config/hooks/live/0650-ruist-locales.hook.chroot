@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+for locale in es_ES.UTF-8 en_US.UTF-8; do
+    if ! grep -Fxq "$locale UTF-8" /etc/locale.gen; then
+        printf '%s UTF-8\n' "$locale" >> /etc/locale.gen
+    fi
+done
+locale-gen
+locale -a | grep -iqx es_ES.utf8
+locale -a | grep -iqx en_US.utf8

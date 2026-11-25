@@ -19,23 +19,26 @@ while :; do
             theme=Arc-Dark
             icons=Papirus-Dark
             dark=true
-            panel_style=1
+            tint=0.0
+            opacity=0.12
             if [ "$OPTION" = claro ]; then
                 theme=Arc
                 icons=Papirus
                 dark=false
-                panel_style=0
+                tint=0.95
+                opacity=0.82
             fi
             xfconf-query -c xsettings -p /Net/ThemeName -n -t string -s "$theme"
             xfconf-query -c xsettings -p /Net/IconThemeName -n -t string -s "$icons"
             xfconf-query -c xfwm4 -p /general/theme -n -t string -s "$theme"
             xfconf-query -c xfce4-panel -p /panels/dark-mode -n -t bool -s "$dark"
-            for panel in 1 2; do
-                path="/panels/panel-$panel/background-style"
-                if xfconf-query -c xfce4-panel -l | grep -Fxq "/panels/panel-$panel/position"; then
-                    xfconf-query -c xfce4-panel -p "$path" -n -t uint -s "$panel_style"
-                fi
-            done
+            panel=/panels/panel-1
+            if xfconf-query -c xfce4-panel -p "$panel/position" >/dev/null 2>&1; then
+                xfconf-query -c xfce4-panel -p "$panel/background-rgba" -n -a \
+                    -t double -s "$tint" -t double -s "$tint" -t double -s "$tint" \
+                    -t double -s "$opacity"
+                xfconf-query -c xfce4-panel -p "$panel/background-style" -n -t uint -s 1
+            fi
             exit 0 ;;
         fondo) exec xfdesktop-settings ;;
         apariencia) exec xfce4-appearance-settings ;;

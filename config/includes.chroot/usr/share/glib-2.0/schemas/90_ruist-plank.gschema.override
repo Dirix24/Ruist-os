@@ -1,0 +1,6 @@
+[net.launchpad.plank.dock.settings]
+position='bottom'
+icon-size=36
+theme='Transparent'
+hide-mode='intelligent'
+auto-pinning=false

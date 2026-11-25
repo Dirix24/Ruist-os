@@ -10,5 +10,7 @@
 | Pendiente | Pruebas físicas de arranque, suspensión, batería, temperatura, pantalla externa, sonido, OpenGL/Vulkan y Wi-Fi en el ASUS X550LC. Medir memoria, disco y tiempo de arranque. Mantener Intel i915 como configuración inicial y verificar el comportamiento de la GT 720M con Nouveau antes de considerar otras opciones. |
 | Pendiente | Integrar el registro reversible para los grupos elegidos en Calamares. Ampliar Ruist Drivers, Recovery y Welcome. Verificar actualización, tienda, recuperación y perfiles completos en una instalación. |
 | Pendiente | Publicar una versión estable después de las pruebas. |
+| Implementado, pendiente de prueba gráfica | Plank en XFCE/X11 con accesos iniciales, panel superior translúcido y locales UTF-8 español e inglés en Live. |
+| En evaluación | Sesión Wayland ligera con Labwc y un dock de Waybar. Comparar RAM en reposo y validar aceleración Intel y arranque en VirtualBox antes de usarla por defecto. |
 
 Las observaciones del portátil corresponden a su sistema actual. Para probar Ruist OS, usar una máquina virtual y un disco desechable. Repetir la instalación con red desactivada y activada. Verificar en cada caso la sesión elegida, el tema, los paquetes y la cuenta creada.

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Instalar Ruist OS
+GenericName=Instalador del sistema
+Exec=calamares-install-debian
+Comment=Instalador de Ruist OS
+Keywords=calamares;system;install;debian;installer
+Icon=ruist-os
+Terminal=false
+Categories=Qt;System;
+StartupWMClass=calamares
+StartupNotify=True

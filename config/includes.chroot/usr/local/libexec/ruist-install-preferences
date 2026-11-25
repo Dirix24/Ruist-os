@@ -29,8 +29,9 @@ def set_appearance(root, choice):
     tree = ET.parse(panel)
     panels = tree.find("./property[@name='panels']")
     panels.find("./property[@name='dark-mode']").set("value", "false")
-    for background in panels.findall("./property/property[@name='background-style']"):
-        background.set("value", "0")
+    colors = panels.findall("./property[@name='panel-1']/property[@name='background-rgba']/value")
+    for color, value in zip(colors, ("0.95", "0.95", "0.95", "0.82"), strict=True):
+        color.set("value", value)
     tree.write(panel, encoding="utf-8", xml_declaration=True)
 
 

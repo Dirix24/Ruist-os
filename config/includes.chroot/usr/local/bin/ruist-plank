@@ -1,0 +1,4 @@
+#!/bin/sh
+# Plank uses X11 window tracking.
+[ "${XDG_SESSION_TYPE:-x11}" = x11 ] || exit 0
+exec plank
