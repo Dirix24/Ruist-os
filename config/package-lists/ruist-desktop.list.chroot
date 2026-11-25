@@ -37,3 +37,7 @@ pkexec
 polkitd
 lxpolkit
 zenity
+
+# Navegador estable de Debian
+firefox-esr
+firefox-esr-l10n-es-es

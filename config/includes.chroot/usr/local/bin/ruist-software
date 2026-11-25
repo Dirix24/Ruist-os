@@ -19,6 +19,7 @@ valid_flatpak_id() {
 }
 
 valid_apt_package() {
+    case "$1" in ""|[!a-z0-9]*|*[!a-z0-9+.-]*) return 1 ;; esac
     case "$1" in
         steam) return 0 ;;
         *) grep -Fxq -- "$1" "$APT_CATALOG" 2>/dev/null ;;
@@ -37,16 +38,21 @@ if [ "${1:-}" = "apt" ] || [ "${1:-}" = "apt-remove" ]; then
             echo "Paquete fuera del catálogo de Ruist Store: $item" >&2
             exit 2
         fi
-        case "$action:$item" in
-            apt:steam|apt:steam-installer)
-                dpkg --add-architecture i386
-                apt-get update
-                apt-get install steam-installer ;;
-            apt:*) apt-get install "$item" ;;
-            apt-remove:steam) apt-get remove steam-installer ;;
-            apt-remove:*) apt-get remove "$item" ;;
-        esac
     done
+    for item do
+        shift
+        case "$item" in steam) item=steam-installer ;; esac
+        set -- "$@" "$item"
+    done
+    case "$action" in
+        apt)
+            case " $* " in
+                *" steam-installer "*) dpkg --add-architecture i386 ;;
+            esac
+            apt-get update
+            apt-get install "$@" ;;
+        apt-remove) apt-get remove "$@" ;;
+    esac
     exit 0
 fi
 
@@ -104,6 +110,10 @@ menu_apt() {
     SEL=$(zenity --list --checklist --title="Programas de Debian" --width=560 --height=560 \
         --text="Aplicaciones de los repositorios APT configurados" \
         --column="" --column="id" --column="Programa" --hide-column=2 --separator=" " \
+        FALSE firefox-esr  "Firefox ESR (navegador de Debian)" \
+        FALSE timeshift    "Timeshift (puntos de restauración)" \
+        FALSE gamemode     "GameMode (perfil de rendimiento para juegos)" \
+        FALSE mangohud     "MangoHud (estadísticas de rendimiento en juegos)" \
         FALSE steam        "Steam (juegos)" \
         FALSE wine         "Wine (programas de Windows)" \
         FALSE obs-studio   "OBS Studio (grabación y streaming)" \

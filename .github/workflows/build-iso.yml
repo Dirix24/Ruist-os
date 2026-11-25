@@ -31,6 +31,9 @@ jobs:
       - name: Comprobar sintaxis y formatos
         run: tools/check-config.sh
 
+      - name: Comprobar regresiones en el validador
+        run: tests/check-config.sh
+
       - name: Ejecutar pruebas unitarias de Ruist OS
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 
@@ -39,7 +42,7 @@ jobs:
 
   build:
     needs: check
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 120
     container:
@@ -95,6 +98,16 @@ jobs:
           set -o pipefail
           lb build 2>&1 | tee build.log
 
+      - name: Comprobar entradas de arranque BIOS y UEFI
+        run: |
+          shopt -s nullglob
+          images=( *.iso )
+          test "${#images[@]}" -eq 1
+          xorriso -indev "${images[0]}" -report_el_torito plain > boot-layout.log 2>&1
+          cat boot-layout.log
+          grep -Eq '^El Torito boot img :[[:space:]]+[0-9]+[[:space:]]+BIOS[[:space:]]+y' boot-layout.log
+          grep -Eq '^El Torito boot img :[[:space:]]+[0-9]+[[:space:]]+UEFI[[:space:]]+y' boot-layout.log
+
       - name: Preparar el archivo final
         run: |
           ISO=$(ls -1 *.iso | head -n1)
@@ -118,6 +131,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ruist-os-build-log
-          path: build.log
+          path: |
+            build.log
+            boot-layout.log
           if-no-files-found: ignore
           retention-days: 7

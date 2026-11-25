@@ -5,3 +5,8 @@ pavucontrol
 bluez
 ffmpeg
 blueman
+
+# Arranque y restauración del sistema
+plymouth
+plymouth-themes
+timeshift

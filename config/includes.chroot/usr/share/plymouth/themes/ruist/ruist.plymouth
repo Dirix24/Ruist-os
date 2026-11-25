@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Ruist OS
+Description=Emblema Ruist Neon animado
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/ruist
+ScriptFile=/usr/share/plymouth/themes/ruist/ruist.script

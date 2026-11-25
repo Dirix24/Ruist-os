@@ -3,7 +3,7 @@
 # Pone el fondo de pantalla de Ruist OS en todos los monitores.
 
 MARCA="$HOME/.config/ruist/first-login-done"
-FONDO="/usr/share/backgrounds/ruist/ruist-default.png"
+FONDO="/usr/share/backgrounds/ruist/ruist-neon.png"
 
 [ -f "$MARCA" ] && exit 0
 [ -f "$FONDO" ] || exit 0

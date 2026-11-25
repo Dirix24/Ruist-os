@@ -1,7 +1,7 @@
 [Default Applications]
-x-scheme-handler/http=brave-browser.desktop
-x-scheme-handler/https=brave-browser.desktop
-x-scheme-handler/about=brave-browser.desktop
-x-scheme-handler/unknown=brave-browser.desktop
-text/html=brave-browser.desktop
-application/xhtml+xml=brave-browser.desktop
+x-scheme-handler/http=firefox-esr.desktop
+x-scheme-handler/https=firefox-esr.desktop
+x-scheme-handler/about=firefox-esr.desktop
+x-scheme-handler/unknown=firefox-esr.desktop
+text/html=firefox-esr.desktop
+application/xhtml+xml=firefox-esr.desktop

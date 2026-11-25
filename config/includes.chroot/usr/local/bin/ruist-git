@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+folder=$(zenity --file-selection --directory --title="Ruist Git · Abre un repositorio local") || exit 0
+if ! root=$(git -C "$folder" rev-parse --show-toplevel 2>/dev/null); then
+    exec zenity --error --title="Ruist Git" --text="La carpeta seleccionada no pertenece a una copia de trabajo de Git."
+fi
+# Gitg accepts the worktree path directly.
+exec gitg -- "$root"

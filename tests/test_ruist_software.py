@@ -64,6 +64,19 @@ class RuistSoftwareTests(unittest.TestCase):
         self.assertIn("Paquete fuera del catálogo", result.stderr)
         self.assertFalse(self.log.exists())
 
+    def test_apt_checks_the_entire_selection_before_installing(self):
+        result = self.run_store("apt", "vlc", "--help", uid=0)
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(self.log.exists())
+
+    def test_apt_refreshes_indexes_and_installs_the_selection_together(self):
+        result = self.run_store("apt", "vlc", "gamemode", uid=0)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            self.log.read_text(encoding="utf-8").splitlines(),
+            ["apt-get update", "apt-get install vlc gamemode"],
+        )
+
     def test_apt_removal_is_allowlisted_and_leaves_confirmation_to_apt(self):
         result = self.run_store("apt-remove", "vlc", uid=0)
         self.assertEqual(result.returncode, 0, result.stderr)

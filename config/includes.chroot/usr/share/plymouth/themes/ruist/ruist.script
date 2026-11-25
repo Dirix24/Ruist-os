@@ -1,0 +1,68 @@
+Window.SetBackgroundTopColor(0.027, 0.043, 0.086);
+Window.SetBackgroundBottomColor(0.035, 0.065, 0.135);
+center_x = Window.GetX() + Window.GetWidth() / 2;
+center_y = Window.GetY() + Window.GetHeight() / 2;
+logo_image = Image("logo.png");
+logo = Sprite(logo_image);
+logo.SetPosition(center_x - logo_image.GetWidth() / 2, center_y - 142, 0);
+logo.SetOpacity(0);
+title_image = Image.Text("RUIST OS", 0.91, 0.96, 1);
+title = Sprite(title_image);
+title.SetPosition(center_x - title_image.GetWidth() / 2, center_y + 63, 1);
+prompt_sprite = Sprite();
+message_sprite = Sprite();
+global.frame = 0;
+global.asking = 0;
+
+fun refresh() {
+    if (!global.asking) {
+        global.frame++;
+        if (global.frame < 48)
+            logo.SetOpacity(global.frame / 48);
+        else
+            logo.SetOpacity(0.92 + 0.08 * Math.Cos((global.frame - 48) / 18));
+    }
+}
+
+fun show_dialog(text, entry) {
+    global.asking = 1;
+    logo.SetOpacity(1);
+    local.image = Image.Text(text + " " + entry, 0.92, 0.96, 1);
+    prompt_sprite.SetImage(local.image);
+    prompt_sprite.SetPosition(center_x - local.image.GetWidth() / 2, center_y + 108, 10);
+    prompt_sprite.SetOpacity(1);
+}
+
+fun password(text, count) {
+    local.mask = "";
+    for (local.i = 0; local.i < count && local.i < 24; local.i++)
+        local.mask += "*";
+    show_dialog(text, local.mask);
+}
+
+fun question(text, entry) {
+    show_dialog(text, entry);
+}
+
+fun normal() {
+    global.asking = 0;
+    prompt_sprite.SetOpacity(0);
+}
+
+fun message(text) {
+    local.image = Image.Text(text, 0.81, 0.88, 1);
+    message_sprite.SetImage(local.image);
+    message_sprite.SetPosition(center_x - local.image.GetWidth() / 2, center_y + 147, 11);
+    message_sprite.SetOpacity(1);
+}
+
+fun hide_message(text) {
+    message_sprite.SetOpacity(0);
+}
+
+Plymouth.SetRefreshFunction(refresh);
+Plymouth.SetDisplayPasswordFunction(password);
+Plymouth.SetDisplayQuestionFunction(question);
+Plymouth.SetDisplayNormalFunction(normal);
+Plymouth.SetDisplayMessageFunction(message);
+Plymouth.SetHideMessageFunction(hide_message);

@@ -1,28 +1,56 @@
 #!/bin/bash
-# Comprueba que todos los paquetes de las listas existen en Debian trixie.
-# Hay que ejecutarlo en un Debian trixie con contrib y non-free activados
-# y la caché de apt actualizada (apt-get update).
-# Uso: tools/check-packages.sh
+# Run with Debian Trixie indexes for main, contrib, non-free and non-free-firmware.
 
-cd "$(dirname "$0")/.." || exit 1
+set -eu
+cd "$(dirname "$0")/.."
 
-FALTAN=0
-for lista in config/package-lists/*.list.chroot config/includes.chroot/usr/share/ruist/profiles/*.list.chroot config/includes.chroot/usr/share/ruist/store/apt-packages.list; do
-    [ -f "$lista" ] || continue
-    while IFS= read -r paquete; do
-        paquete="${paquete%%#*}"
-        paquete="$(echo "$paquete" | xargs)"
-        [ -z "$paquete" ] && continue
-        if ! apt-cache show --no-all-versions "$paquete" >/dev/null 2>&1; then
-            echo "FALTA: $paquete   (en $lista)"
-            FALTAN=$((FALTAN + 1))
-        fi
-    done < "$lista"
-done
+python3 - <<'PYAML'
+import re
+import subprocess
+import sys
+from collections import defaultdict
+from pathlib import Path
 
-if [ "$FALTAN" -gt 0 ]; then
-    echo
-    echo "$FALTAN paquete(s) no existen en trixie. Corrige o quita esas líneas."
-    exit 1
-fi
-echo "Todos los paquetes existen en trixie."
+import yaml
+
+sources = defaultdict(list)
+config = Path("config")
+ruist = config / "includes.chroot/usr/share/ruist"
+paths = [
+    *sorted((config / "package-lists").glob("*.list.chroot")),
+    *sorted((ruist / "profiles").glob("*.list.chroot")),
+    ruist / "store/apt-packages.list",
+]
+for path in paths:
+    for line in path.read_text(encoding="utf-8").splitlines():
+        package = line.split("#", 1)[0].strip()
+        if package:
+            sources[package].append(path.name)
+
+modules = config / "includes.chroot/etc/calamares/modules"
+for name in ("desktop-choice.conf", "application-choice.conf"):
+    choices = yaml.safe_load((modules / name).read_text(encoding="utf-8"))
+    for item in choices["items"]:
+        for package in item["packages"]:
+            sources[package].append(name)
+
+for package in sources:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9+.-]*", package):
+        sys.exit(f"Nombre de paquete no válido: {package}")
+
+# One call reads the indexes once. Compare exact names since APT can also
+# resolve virtual packages and patterns that are absent from the indexes.
+result = subprocess.run(
+    ["apt-cache", "show", "--no-all-versions", "--", *sorted(sources)],
+    text=True, capture_output=True, check=False,
+)
+available = set(re.findall(r"^Package: (\S+)$", result.stdout, re.MULTILINE))
+missing = sorted(sources.keys() - available)
+for package in missing:
+    print(f"FALTA: {package} (en {', '.join(sources[package])})")
+if missing or result.returncode:
+    if not available or not missing:
+        print(result.stderr, file=sys.stderr, end="")
+    sys.exit(1)
+print("Todos los paquetes existen en Trixie.")
+PYAML

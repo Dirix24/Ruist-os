@@ -1,3 +1,4 @@
 # Escritorio Plasma opcional; se instala junto a XFCE y se elige al iniciar sesión
 kde-plasma-desktop
+kwin-x11
 plasma-nm

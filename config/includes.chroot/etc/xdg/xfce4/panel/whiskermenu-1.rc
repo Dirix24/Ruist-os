@@ -1,4 +1,4 @@
-favorites=brave-browser.desktop,ruist-software.desktop,ruist-center.desktop,ruist-drivers.desktop,steam.desktop,com.valvesoftware.Steam.desktop,blender.desktop,code.desktop,simplescreenrecorder.desktop,xfce4-terminal.desktop,thunar.desktop,mousepad.desktop
+favorites=firefox-esr.desktop,ruist-software.desktop,ruist-center.desktop,ruist-git.desktop,ruist-drivers.desktop,steam.desktop,com.valvesoftware.Steam.desktop,blender.desktop,code.desktop,simplescreenrecorder.desktop,xfce4-terminal.desktop,thunar.desktop,mousepad.desktop
 button-icon=ruist-os
 show-button-title=false
 show-button-icon=true

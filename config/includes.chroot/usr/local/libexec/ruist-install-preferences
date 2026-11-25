@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+"""Set installed desktop defaults in the Calamares target."""
+
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+
+def set_appearance(root, choice):
+    if choice == "oscuro":
+        return
+    if choice != "claro":
+        raise ValueError("Tema de Ruist desconocido")
+
+    xfce = root / "etc/xdg/xfce4"
+    channels = xfce / "xfconf/xfce-perchannel-xml"
+    for filename, group, settings in (
+        ("xsettings.xml", "Net", {"ThemeName": "Arc", "IconThemeName": "Papirus"}),
+        ("xfwm4.xml", "general", {"theme": "Arc"}),
+    ):
+        path = channels / filename
+        tree = ET.parse(path)
+        parent = tree.find(f"./property[@name='{group}']")
+        for prop, value in settings.items():
+            parent.find(f"./property[@name='{prop}']").set("value", value)
+        tree.write(path, encoding="utf-8", xml_declaration=True)
+
+    panel = xfce / "panel/default.xml"
+    tree = ET.parse(panel)
+    panels = tree.find("./property[@name='panels']")
+    panels.find("./property[@name='dark-mode']").set("value", "false")
+    for background in panels.findall("./property/property[@name='background-style']"):
+        background.set("value", "0")
+    tree.write(panel, encoding="utf-8", xml_declaration=True)
+
+
+def set_session(root):
+    # The ISO contains XFCE only. The mutually exclusive optional desktop
+    # selection adds at most one of these X11 session files.
+    sessions = root / "usr/share/xsessions"
+    selected = next(
+        (name for name in ("plasmax11", "lxqt") if (sessions / f"{name}.desktop").is_file()),
+        "xfce",
+    )
+    config = root / "etc/lightdm/lightdm.conf.d/90-ruist-session.conf"
+    config.write_text(f"[Seat:*]\nuser-session={selected}\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    target = Path("/")
+    set_appearance(target, sys.argv[1])
+    set_session(target)

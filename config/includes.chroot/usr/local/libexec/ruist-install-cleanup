@@ -1,0 +1,25 @@
+#!/bin/sh
+# Run in the freshly unpacked Calamares target, before creating its user.
+set -eu
+
+test -f /etc/live/config.conf.d/ruist.conf
+live_user=$(getent -s files passwd ruist || :)
+if [ -n "$live_user" ]; then
+    # The live session may have a running process with the same UID outside the chroot.
+    test "$(printf '%s\n' "$live_user" | cut -d: -f6)" = /home/ruist
+    userdel --force --remove ruist
+fi
+rm -f /etc/lightdm/lightdm.conf.d/50-ruist-live.conf /etc/sudoers.d/live
+
+set --
+for package in live-boot live-boot-doc live-config live-config-doc live-config-systemd \
+    live-tools live-task-localisation live-task-recommended calamares-settings-debian; do
+    status=$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || :)
+    if [ "$status" = installed ]; then
+        set -- "$@" "$package"
+    fi
+done
+if [ "$#" -gt 0 ]; then
+    DEBIAN_FRONTEND=noninteractive apt-get -y --no-download remove "$@"
+fi
+rm -f /etc/live/config.conf.d/ruist.conf

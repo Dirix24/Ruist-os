@@ -21,13 +21,8 @@ touch "$FIXTURE/config/bootstrap" "$FIXTURE/config/chroot" \
     "$FIXTURE/config/binary" "$FIXTURE/config/common" \
     "$FIXTURE/config/source" \
     "$FIXTURE/config/archives/debian.list.chroot" \
-    "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf" \
-    "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf"
+    "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf"
 touch "$FIXTURE/config/includes.chroot/usr/share/ruist/store/apt-packages.list"
-cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages.conf" <<'EOF'
-update_db: false
-update_system: false
-EOF
 cat > "$FIXTURE/config/includes.chroot/etc/calamares/modules/packages-extra.conf" <<'EOF'
 skip_if_no_internet: true
 update_db: true
@@ -36,7 +31,10 @@ EOF
 touch "$FIXTURE/config/includes.chroot/etc/calamares/modules/desktop-choice.conf"
 cat > "$FIXTURE/config/includes.chroot/etc/calamares/settings.conf" <<'EOF'
 packagechooser@desktop
-packages@base
+packagechooser@appearance
+packagechooser@applications
+shellprocess@cleanup
+shellprocess@preferences
 packages@optional
 EOF
 for profile in universal gaming development architecture productivity desktop-plasma desktop-lxqt; do

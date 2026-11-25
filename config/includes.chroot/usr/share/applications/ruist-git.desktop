@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ruist Git
+Comment=Abre una copia local de un repositorio Git
+Exec=/usr/local/bin/ruist-git
+Icon=gitg
+Terminal=false
+Categories=Development;RevisionControl;

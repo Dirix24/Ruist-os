@@ -7,12 +7,36 @@ while :; do
     OPTION=$(zenity --list --title="Ruist Desktop" --width=440 --height=300 \
         --text="Configura el escritorio XFCE" --hide-header \
         --column="id" --column="Ajuste" --hide-column=1 \
+        oscuro "Aplicar tema oscuro" \
+        claro "Aplicar tema claro" \
         fondo "Fondo e iconos del escritorio" \
         apariencia "Tema e iconos" \
         efectos "Efectos de ventanas" \
         pantalla "Pantallas y resolución" 2>/dev/null) || exit 0
 
     case "$OPTION" in
+        oscuro|claro)
+            theme=Arc-Dark
+            icons=Papirus-Dark
+            dark=true
+            panel_style=1
+            if [ "$OPTION" = claro ]; then
+                theme=Arc
+                icons=Papirus
+                dark=false
+                panel_style=0
+            fi
+            xfconf-query -c xsettings -p /Net/ThemeName -n -t string -s "$theme"
+            xfconf-query -c xsettings -p /Net/IconThemeName -n -t string -s "$icons"
+            xfconf-query -c xfwm4 -p /general/theme -n -t string -s "$theme"
+            xfconf-query -c xfce4-panel -p /panels/dark-mode -n -t bool -s "$dark"
+            for panel in 1 2; do
+                path="/panels/panel-$panel/background-style"
+                if xfconf-query -c xfce4-panel -l | grep -Fxq "/panels/panel-$panel/position"; then
+                    xfconf-query -c xfce4-panel -p "$path" -n -t uint -s "$panel_style"
+                fi
+            done
+            exit 0 ;;
         fondo) exec xfdesktop-settings ;;
         apariencia) exec xfce4-appearance-settings ;;
         efectos) exec xfwm4-tweaks-settings ;;

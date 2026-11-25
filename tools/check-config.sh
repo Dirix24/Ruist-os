@@ -12,7 +12,7 @@ fallo() {
 }
 
 echo "Comprobando scripts de shell..."
-for f in config/hooks/live/*.hook.chroot config/includes.chroot/usr/local/bin/*; do
+for f in config/hooks/live/*.hook.chroot config/includes.chroot/usr/local/bin/* config/includes.chroot/usr/local/libexec/*; do
     [ -f "$f" ] || continue
     [ -L "$f" ] && continue
     interprete=$(head -n 1 "$f")
@@ -55,7 +55,6 @@ echo "Comprobando archivos obligatorios..."
 for f in config/bootstrap config/chroot config/binary config/common config/source \
          config/archives/debian.list.chroot \
          config/includes.chroot/etc/calamares/settings.conf \
-         config/includes.chroot/etc/calamares/modules/packages.conf \
          config/includes.chroot/etc/calamares/modules/packages-extra.conf \
          config/includes.chroot/etc/calamares/modules/desktop-choice.conf \
          config/includes.chroot/usr/local/bin/ruist-kernel \
@@ -72,14 +71,9 @@ done
 [ -d config/package-lists ] || fallo "falta el directorio config/package-lists"
 
 echo "Comprobando instalación offline de Calamares..."
-for clave in update_db update_system; do
-    if ! grep -Eq "^[[:space:]]*$clave:[[:space:]]*false([[:space:]]*(#.*)?)?$" config/includes.chroot/etc/calamares/modules/packages.conf; then
-        fallo "packages.conf debe mantener $clave: false para permitir la instalación esencial offline"
-    fi
-done
-for clave in packagechooser@desktop packages@base packages@optional; do
-    grep -Fq -- "$clave" config/includes.chroot/etc/calamares/settings.conf \
-        || fallo "settings.conf debe incluir el módulo $clave"
+for modulo in packagechooser@desktop packagechooser@appearance packagechooser@applications shellprocess@cleanup shellprocess@preferences packages@optional; do
+    grep -Fq -- "$modulo" config/includes.chroot/etc/calamares/settings.conf \
+        || fallo "settings.conf debe incluir el módulo $modulo"
 done
 for clave in skip_if_no_internet update_db update_system; do
     grep -Eq "^[[:space:]]*$clave:" config/includes.chroot/etc/calamares/modules/packages-extra.conf \
@@ -101,20 +95,32 @@ import yaml
 
 root = Path("config/includes.chroot/etc/calamares")
 settings = yaml.safe_load((root / "settings.conf").read_text(encoding="utf-8"))
-base = yaml.safe_load((root / "modules/packages.conf").read_text(encoding="utf-8"))
 optional = yaml.safe_load((root / "modules/packages-extra.conf").read_text(encoding="utf-8"))
 chooser = yaml.safe_load((root / "modules/desktop-choice.conf").read_text(encoding="utf-8"))
-assert base["update_db"] is False and base["update_system"] is False
 assert optional["skip_if_no_internet"] is True and optional["update_db"] is True
 assert optional["update_system"] is False
 instances = {(item["module"], item["id"]): item["config"] for item in settings["instances"]}
 assert instances[("packagechooser", "desktop")] == "desktop-choice.conf"
-assert instances[("packages", "base")] == "packages.conf"
 assert instances[("packages", "optional")] == "packages-extra.conf"
 phases = settings["sequence"]
-assert "packages@base" in phases[1]["exec"]
-assert "packagechooser@desktop" in phases[2]["show"]
-assert "packages@optional" in phases[3]["exec"]
+assert instances[("packagechooser", "appearance")] == "appearance-choice.conf"
+assert instances[("packagechooser", "applications")] == "application-choice.conf"
+assert instances[("shellprocess", "cleanup")] == "ruist-cleanup.conf"
+assert instances[("shellprocess", "preferences")] == "ruist-preferences.conf"
+show = phases[0]["show"]
+for choice in ("desktop", "appearance", "applications"):
+    assert show.index(f"packagechooser@{choice}") < show.index("partition")
+jobs = phases[1]["exec"]
+assert jobs.index("unpackfs") < jobs.index("shellprocess@cleanup") < jobs.index("users")
+assert jobs.index("sources-final") < jobs.index("packages@optional") < jobs.index("shellprocess@preferences")
+welcome = yaml.safe_load((root / "modules/welcome.conf").read_text(encoding="utf-8"))["requirements"]
+assert "internet" in welcome["check"] and "internet" not in welcome["required"]
+appearance = yaml.safe_load((root / "modules/appearance-choice.conf").read_text(encoding="utf-8"))
+assert appearance["method"] == "legacy" and appearance["default"] == "oscuro"
+assert {item["id"] for item in appearance["items"]} == {"oscuro", "claro"}
+applications = yaml.safe_load((root / "modules/application-choice.conf").read_text(encoding="utf-8"))
+assert applications["method"] == "packages" and applications["mode"] == "optionalmultiple"
+assert all(item["packages"] for item in applications["items"])
 assert chooser["method"] == "packages" and chooser["default"] == "xfce"
 items = {item["id"]: item for item in chooser["items"]}
 assert set(items) == {"xfce", "plasma", "lxqt"}

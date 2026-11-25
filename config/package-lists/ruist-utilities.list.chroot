@@ -16,3 +16,5 @@ gdisk
 dosfstools
 e2fsprogs
 ntfs-3g
+git
+gitg

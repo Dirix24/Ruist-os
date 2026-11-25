@@ -6,7 +6,7 @@ PURGE="
 xfburn parole orage ristretto xfce4-dict xfce4-goodies
 hexchat pidgin transmission-gtk transmission-common thunderbird
 libreoffice-common libreoffice-core libreoffice-writer libreoffice-calc libreoffice-impress
-firefox-esr rhythmbox totem gnome-games
+rhythmbox totem gnome-games
 cups cups-daemon cups-browsed avahi-daemon
 exim4-base exim4-daemon-light
 popularity-contest reportbug

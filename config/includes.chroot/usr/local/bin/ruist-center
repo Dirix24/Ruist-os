@@ -7,8 +7,10 @@ while true; do
         --column="id" --column="Acción" --hide-column=1 \
         actualizar "Actualizar el sistema" \
         software   "Tienda de programas" \
+        repositorios "Repositorios Git" \
         drivers    "Drivers y componentes (NVIDIA, Wi-Fi...)" \
         rendimiento "Modo de rendimiento" \
+        restaurar  "Puntos de restauración (Timeshift)" \
         limpiar    "Limpiar el sistema" \
         info       "Información del sistema" \
         escritorio "Configuración del escritorio" \
@@ -21,15 +23,19 @@ while true; do
             xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-update" ;;
         software)
             ruist-software ;;
+        repositorios)
+            ruist-git ;;
         drivers)
             ruist-drivers ;;
         rendimiento)
             MODO=$(zenity --list --title="Modo de rendimiento" --width=360 --height=260 \
                 --text="$(ruist-perf estado)" --hide-header \
                 --column="id" --column="Modo" --hide-column=1 \
-                rendimiento "Rendimiento máximo" \
-                equilibrado "Equilibrado (automático)" \
-                ahorro      "Ahorro de energía" 2>/dev/null) && ruist-perf "$MODO" ;;
+                rendimiento "Perfil de corriente" \
+                equilibrado "Automático (corriente o batería)" \
+                ahorro      "Ahorro de energía" 2>/dev/null) && { ruist-perf "$MODO" || zenity --error --text="No se pudo aplicar el perfil de energía."; } ;;
+        restaurar)
+            timeshift-launcher ;;
         limpiar)
             xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-maintenance cleanup" ;;
         info)

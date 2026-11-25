@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Brave
+Name=Firefox ESR
 Comment=Navegador web
-Exec=brave-browser %U
-Icon=brave-browser
+Exec=firefox-esr %U
+Icon=firefox-esr
 Terminal=false
 Categories=Network;WebBrowser;
