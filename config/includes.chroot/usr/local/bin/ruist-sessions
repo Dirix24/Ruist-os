@@ -1,35 +1,86 @@
 #!/bin/sh
-# Installation of alternate sessions uses the same manifests as Calamares.
+# LightDM uses AccountsService XSession as the user's saved login choice.
 set -eu
 
-session_state() {
-    if [ -f "/usr/share/xsessions/$1.desktop" ]; then
-        printf 'Instalado'
+accounts=org.freedesktop.Accounts
+interface=$accounts.User
+account_path() {
+    busctl --system call "$accounts" /org/freedesktop/Accounts "$accounts" \
+        FindUserById x "$(id -u)" | sed -n 's/^o "\(\/org\/freedesktop\/Accounts\/User[0-9]*\)"$/\1/p'
+}
+
+select_session() {
+    case "$1" in
+        xfce) session=xfce ;;
+        plasma) session=plasmax11 ;;
+        lxqt) session=lxqt ;;
+        *) return 2 ;;
+    esac
+}
+
+save_session() {
+    [ -f "/usr/share/xsessions/$session.desktop" ] || return 1
+    path=$(account_path)
+    [ -n "$path" ] || return 1
+    busctl --system call "$accounts" "$path" "$interface" SetXSession s "$session" &&
+        [ "$(busctl --system get-property "$accounts" "$path" "$interface" XSession)" = "s \"$session\"" ]
+}
+
+apply_choice() {
+    if save_session; then
+        zenity --info --title="Escritorio guardado" --width=490 \
+            --text="Se ha guardado tu escritorio predeterminado. Cierra sesión cuando hayas guardado tu trabajo. El próximo inicio usará el escritorio elegido."
     else
-        printf 'Disponible con Internet'
+        zenity --error --title="Escritorios de Ruist OS" \
+            --text="No se pudo guardar la sesión. Comprueba que el escritorio esté instalado y que LightDM esté activo."
+        return 1
     fi
 }
 
-choice=$(zenity --list --title="Escritorios de Ruist OS" --width=600 --height=350 \
-    --text="Instala otro escritorio o consulta cómo elegirlo al iniciar sesión." \
+if [ "${1:-}" = "--install" ]; then
+    [ "$#" -eq 2 ] || exit 2
+    select_session "$2" && [ "$2" != xfce ] || exit 2
+    pkexec /usr/local/bin/ruist-profile install "desktop-$2"
+    apply_choice
+    exit
+fi
+
+path=$(account_path) || path=
+current=
+if [ -n "$path" ]; then
+    current=$(busctl --system get-property "$accounts" "$path" "$interface" XSession 2>/dev/null || :)
+fi
+case "$current" in
+    's "xfce"') current=xfce ;;
+    's "plasmax11"') current=plasmax11 ;;
+    's "lxqt"') current=lxqt ;;
+    *) current=$(sed -n 's/^user-session=//p' /etc/lightdm/lightdm.conf.d/90-ruist-session.conf 2>/dev/null || :) ;;
+esac
+
+session_state() {
+    if [ ! -f "/usr/share/xsessions/$1.desktop" ]; then
+        printf 'Disponible con Internet'
+    elif [ "$current" = "$1" ]; then
+        printf 'Predeterminado'
+    else
+        printf 'Instalado'
+    fi
+}
+
+choice=$(zenity --list --title="Escritorios de Ruist OS" --width=625 --height=360 \
+    --text="Elige un escritorio. Quedará guardado para los siguientes inicios de sesión." \
     --column=ID --hide-column=1 --column=Escritorio --column=Estado \
     xfce "XFCE · ligero" "$(session_state xfce)" \
     plasma "KDE Plasma · personalizable" "$(session_state plasmax11)" \
     lxqt "LXQt · ligero" "$(session_state lxqt)") || exit 0
 
-case "$choice" in
-    xfce) session=xfce ;;
-    plasma) session=plasmax11 ;;
-    lxqt) session=lxqt ;;
-    *) exit 2 ;;
-esac
-
+select_session "$choice"
 if [ -f "/usr/share/xsessions/$session.desktop" ]; then
-    exec zenity --info --title="Cambiar de escritorio" --width=470 \
-        --text="Guarda tu trabajo y cierra sesión. En la pantalla de acceso, abre el selector de sesión, elige el escritorio e inicia sesión."
+    apply_choice
+    exit
 fi
 
 [ "$choice" != xfce ] || exit 1
-zenity --question --title="Instalar escritorio" --width=480 \
-    --text="Se descargarán los paquetes de Debian. XFCE seguirá disponible. Al terminar, cierra sesión y elige el nuevo escritorio en la pantalla de acceso." || exit 0
-exec xfce4-terminal --hold --execute pkexec /usr/local/bin/ruist-profile install "desktop-$choice"
+zenity --question --title="Instalar y elegir escritorio" --width=490 \
+    --text="Se descargarán los paquetes de Debian. Al terminar, este escritorio quedará como predeterminado. XFCE seguirá disponible en el selector." || exit 0
+exec xfce4-terminal --hold --execute /usr/local/bin/ruist-sessions --install "$choice"

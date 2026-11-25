@@ -1,3 +1,9 @@
 # Tienda de programas
 flatpak
 synaptic
+
+# GNOME Software funciona en XFCE, Plasma y LXQt.
+gnome-software
+gnome-software-plugin-deb
+gnome-software-plugin-flatpak
+xdg-desktop-portal-gtk

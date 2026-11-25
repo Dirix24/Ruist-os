@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Paquetes y herramientas Ruist
+Comment=Gestiona el catálogo avanzado, Steam y Synaptic
+Exec=/usr/local/bin/ruist-software
+Icon=system-software-install
+Terminal=false
+Categories=System;PackageManager;

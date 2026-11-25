@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+# Install AppStream metadata and icons alongside the package indexes.
+apt-get -o APT::Update::Error-Mode=any update
+find /var/lib/apt/lists -maxdepth 1 -name '*_dep11_Components-amd64.yml*' -print -quit | grep -q .
+appstreamcli refresh --force --source=os

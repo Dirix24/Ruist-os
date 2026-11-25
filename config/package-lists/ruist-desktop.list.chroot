@@ -44,3 +44,6 @@ firefox-esr-l10n-es-es
 
 # Dock de la sesión XFCE/X11
 plank
+
+# Preferencia de escritorio por usuario en LightDM
+accountsservice

@@ -19,6 +19,6 @@ choice=$(zenity --list --title="Bienvenido a Ruist OS" --width=560 --height=330 
 case "$choice" in
     drivers) exec ruist-drivers ;;
     sessions) exec ruist-sessions ;;
-    store) exec ruist-software ;;
+    store) exec gnome-software ;;
     center) exec ruist-center ;;
 esac

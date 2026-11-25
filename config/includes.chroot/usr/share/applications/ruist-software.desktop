@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Tienda de programas
-Comment=Instala programas desde Flathub, Debian y Synaptic
-Exec=/usr/local/bin/ruist-software
+Comment=Explora, instala y actualiza aplicaciones de Debian y Flathub
+Exec=gnome-software
 Icon=system-software-install
 Terminal=false
 Categories=System;PackageManager;Settings;

@@ -23,7 +23,7 @@ while true; do
         actualizar)
             xfce4-terminal --hold -e "pkexec /usr/local/bin/ruist-update" ;;
         software)
-            ruist-software ;;
+            gnome-software ;;
         repositorios)
             ruist-git ;;
         drivers)

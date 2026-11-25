@@ -131,6 +131,11 @@ Para jugar, instala Steam o Lutris desde Ruist Store. El perfil Gaming añade Ga
 
 En el primer inicio, **Bienvenido a Ruist OS** abre **Hardware y controladores** o **Instalar o cambiar de escritorio**. También puedes volver a abrir ambas herramientas desde Ruist Center o el menú de aplicaciones.
 
-Para cambiar a un escritorio ya instalado, guarda tu trabajo, cierra sesión y usa el selector de la pantalla de acceso. El gestor puede instalar Plasma y LXQt desde Debian. Para la instalación sin conexión, XFCE está incluido en la ISO.
+Cuando eliges un escritorio en Ruist Center, queda guardado en tu cuenta. Guarda tu trabajo y cierra sesión para abrirlo. Si todavía no está instalado, el gestor lo descarga desde Debian y lo guarda al terminar. El selector de LightDM también te permite cambiar de sesión. XFCE está incluido para instalar sin Internet.
 
 En **Controladores de Ruist OS**, el inventario muestra los módulos activos. Los controladores propietarios y el firmware se eligen por separado. El inventario distingue lo que se detecta de lo que se ha podido verificar.
+
+
+## Tienda gráfica
+
+**Tienda de programas** abre GNOME Software de Debian, con catálogo AppStream, búsqueda, instalación, desinstalación y actualizaciones. La ficha de cada aplicación indica si procede de Debian o Flathub. **Paquetes y herramientas Ruist** conserva el acceso a Synaptic y a la instalación guiada de Steam.
