@@ -10,3 +10,11 @@ blueman
 plymouth
 plymouth-themes
 timeshift
+
+# Audio Bluetooth, gestión de impresoras y digitalización.
+libspa-0.2-bluetooth
+cups
+system-config-printer
+simple-scan
+cups-pk-helper
+sane-airscan

@@ -9,6 +9,7 @@ while true; do
         software   "Tienda de programas" \
         repositorios "Repositorios Git" \
         drivers    "Drivers y componentes (NVIDIA, Wi-Fi...)" \
+        impresoras "Impresoras" \
         rendimiento "Modo de rendimiento" \
         restaurar  "Puntos de restauración (Timeshift)" \
         limpiar    "Limpiar el sistema" \
@@ -28,13 +29,22 @@ while true; do
             ruist-git ;;
         drivers)
             ruist-drivers ;;
+        impresoras)
+            system-config-printer ;;
         rendimiento)
-            MODO=$(zenity --list --title="Modo de rendimiento" --width=360 --height=260 \
-                --text="$(ruist-perf estado)" --hide-header \
+            MODO=$(zenity --list --title="Modo de rendimiento" --width=525 --height=325 \
+                --text="TLP adapta el consumo al equipo. Elige un perfil o consulta el diagnóstico." --hide-header \
                 --column="id" --column="Modo" --hide-column=1 \
                 rendimiento "Perfil de corriente" \
                 equilibrado "Automático (corriente o batería)" \
-                ahorro      "Ahorro de energía" 2>/dev/null) && { ruist-perf "$MODO" || zenity --error --text="No se pudo aplicar el perfil de energía."; } ;;
+                ahorro      "Ahorro de energía" \
+                estado      "Ver diagnóstico del equipo" 2>/dev/null) || continue
+            if [ "$MODO" = estado ]; then
+                ruist-perf estado 2>&1 | zenity --text-info --title="Rendimiento" \
+                    --width=700 --height=500 --filename=/dev/stdin
+            else
+                ruist-perf "$MODO" || zenity --error --text="No se pudo aplicar el perfil de energía."
+            fi ;;
         restaurar)
             timeshift-launcher ;;
         limpiar)

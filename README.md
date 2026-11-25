@@ -139,3 +139,12 @@ En **Controladores de Ruist OS**, el inventario muestra los módulos activos. Lo
 ## Tienda gráfica
 
 **Tienda de programas** abre GNOME Software de Debian, con catálogo AppStream, búsqueda, instalación, desinstalación y actualizaciones. La ficha de cada aplicación indica si procede de Debian o Flathub. **Paquetes y herramientas Ruist** conserva el acceso a Synaptic y a la instalación guiada de Steam.
+
+
+## Personalización y rendimiento
+
+Desde **Ruist Center → Personalizar XFCE** puedes elegir los fondos Azul Neón, Violeta y Minimal, usar una imagen propia, ajustar Plank y cambiar entre modo claro y oscuro. Las preferencias se guardan por usuario.
+
+Debian incluye el microcódigo para CPU Intel y AMD. TLP ajusta los perfiles según la alimentación, ZRAM se dimensiona según la memoria y el sistema programa TRIM para unidades y sistemas de archivos que lo admiten. **Modo de rendimiento** muestra memoria, ZRAM, discos y el estado de TLP. Las mejoras en autonomía y FPS se deben medir en cada equipo.
+
+El sistema incluye audio Bluetooth con PipeWire y herramientas de impresión y escaneo de Debian. **Ruist Center → Impresoras** abre el administrador de impresoras.

@@ -1,0 +1,26 @@
+#!/bin/sh
+# Apply a Ruist wallpaper to each Xfdesktop monitor in this session.
+set -eu
+
+case "${1:-neon}" in
+    neon|violeta|minimal) image="/usr/share/backgrounds/ruist/ruist-${1:-neon}.png" ;;
+    *) exit 2 ;;
+esac
+[ -r "$image" ] || exit 1
+
+properties=$(xfconf-query -c xfce4-desktop -l)
+contexts=$(printf '%s\n' "$properties" | sed -n 's@^\(/backdrop/screen[0-9]*/monitor[^/]*/workspace[0-9]*\)/last-image$@\1@p')
+monitors=$(xrandr --listmonitors 2>/dev/null | awk 'NR>1 {print $NF}')
+for monitor in $monitors; do
+    context="/backdrop/screen0/monitor$monitor/workspace0"
+    if ! printf '%s\n' "$contexts" | grep -Fxq -- "$context"; then
+        contexts=$(printf '%s\n%s' "$contexts" "$context")
+    fi
+done
+[ -n "$contexts" ] || exit 1
+
+printf '%s\n' "$contexts" | while IFS= read -r context; do
+    [ -n "$context" ] || continue
+    xfconf-query -c xfce4-desktop -p "$context/last-image" -n -t string -s "$image"
+    xfconf-query -c xfce4-desktop -p "$context/image-style" -n -t int -s 5
+done

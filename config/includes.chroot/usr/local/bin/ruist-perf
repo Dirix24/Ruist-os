@@ -8,6 +8,10 @@ case "${1:-estado}" in
         free -h
         printf '\nZRAM\n'
         /usr/sbin/zramctl
+        printf '\nDiscos y capacidad de descarte (TRIM)\n'
+        lsblk -d -o NAME,SIZE,ROTA,TRAN,DISC-MAX,SCHED
+        printf '\nCarga y tiempo encendido\n'
+        uptime
         printf '\nEstado de energía\n'
         exec tlp-stat -s
         ;;

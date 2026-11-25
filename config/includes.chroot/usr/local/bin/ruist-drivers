@@ -67,8 +67,17 @@ menu_nvidia() {
         return
     fi
 
-    INFORME=$(nvidia-detect 2>&1)
+    if lspci -Dn | grep -Eq '[[:space:]]03[0-9a-f]{2}:[[:space:]]+10de:1140([[:space:]]|$)'; then
+        zenity --info --title="NVIDIA GeForce GF117" --width=495 \
+            --text="Se detectó una GPU GF117 (por ejemplo, GT 720M). Ruist no ofrece un controlador propietario compatible desde Debian Trixie. Consulta el inventario y usa la gráfica Intel si está presente. 3D y juegos requieren pruebas aparte." 2>/dev/null
+        return
+    fi
+
+    INFORME=$(LC_ALL=C nvidia-detect 2>&1)
     PAQUETE=$(echo "$INFORME" | grep -o 'nvidia-[a-z0-9.-]*driver' | head -1)
+    if [ -n "$PAQUETE" ] && ! apt-cache show --no-all-versions "$PAQUETE" >/dev/null 2>&1; then
+        PAQUETE=
+    fi
     ACTUAL=$(dpkg -l 2>/dev/null | awk '/^ii +nvidia-[a-z0-9.-]*driver /{print $2; exit}')
 
     if ! echo "$INFORME" | grep -qi 'detected nvidia'; then

@@ -9,3 +9,7 @@ firmware-linux-free
 firmware-linux-nonfree
 firmware-misc-nonfree
 firmware-sof-signed
+
+# Microcódigo Intel y AMD. El kernel carga únicamente el que corresponde a la CPU.
+intel-microcode
+amd64-microcode

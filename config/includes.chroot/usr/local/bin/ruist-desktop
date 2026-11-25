@@ -4,12 +4,16 @@
 set -eu
 
 while :; do
-    OPTION=$(zenity --list --title="Ruist Desktop" --width=440 --height=300 \
+    OPTION=$(zenity --list --title="Ruist Desktop" --width=480 --height=430 \
         --text="Configura el escritorio XFCE" --hide-header \
         --column="id" --column="Ajuste" --hide-column=1 \
         oscuro "Aplicar tema oscuro" \
         claro "Aplicar tema claro" \
-        fondo "Fondo e iconos del escritorio" \
+        neon "Fondo Ruist Azul Neón" \
+        violeta "Fondo Ruist Violeta" \
+        minimal "Fondo Ruist Minimal" \
+        dock "Preferencias del dock Plank" \
+        fondo "Fondo propio e iconos del escritorio" \
         apariencia "Tema e iconos" \
         efectos "Efectos de ventanas" \
         pantalla "Pantallas y resolución" 2>/dev/null) || exit 0
@@ -40,6 +44,8 @@ while :; do
                 xfconf-query -c xfce4-panel -p "$panel/background-style" -n -t uint -s 1
             fi
             exit 0 ;;
+        neon|violeta|minimal) exec ruist-wallpaper "$OPTION" ;;
+        dock) exec plank --preferences ;;
         fondo) exec xfdesktop-settings ;;
         apariencia) exec xfce4-appearance-settings ;;
         efectos) exec xfwm4-tweaks-settings ;;
