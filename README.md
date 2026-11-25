@@ -125,3 +125,12 @@ Plymouth muestra el emblema animado de Ruist OS durante el arranque gráfico. Si
 Abre **Ruist Center → Puntos de restauración (Timeshift)** para elegir el destino y crear una instantánea manual. En ext4, como el disco actual del ASUS X550LC, elige **RSYNC**. Puedes activar un calendario en Timeshift si lo deseas. Timeshift está pensado para restaurar el sistema. Guarda tus documentos y partidas en una copia aparte.
 
 Para jugar, instala Steam o Lutris desde Ruist Store. El perfil Gaming añade GameMode y MangoHud. La compatibilidad de Proton depende del juego, su sistema antitrampas y el controlador gráfico.
+
+
+## Cambiar de escritorio y revisar controladores
+
+En el primer inicio, **Bienvenido a Ruist OS** abre **Hardware y controladores** o **Instalar o cambiar de escritorio**. También puedes volver a abrir ambas herramientas desde Ruist Center o el menú de aplicaciones.
+
+Para cambiar a un escritorio ya instalado, guarda tu trabajo, cierra sesión y usa el selector de la pantalla de acceso. El gestor puede instalar Plasma y LXQt desde Debian. Para la instalación sin conexión, XFCE está incluido en la ISO.
+
+En **Controladores de Ruist OS**, el inventario muestra los módulos activos. Los controladores propietarios y el firmware se eligen por separado. El inventario distingue lo que se detecta de lo que se ha podido verificar.

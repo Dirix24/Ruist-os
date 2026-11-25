@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Escritorios de Ruist OS
+Comment=Instala escritorios adicionales y elige la sesión
+Exec=/usr/local/bin/ruist-sessions
+Icon=preferences-desktop
+Terminal=false
+Categories=Settings;DesktopSettings;

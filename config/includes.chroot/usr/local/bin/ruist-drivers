@@ -79,7 +79,7 @@ menu_nvidia() {
 
     TEXTO="$INFORME
 
-Driver instalado: ${ACTUAL:-ninguno (se usa el libre, nouveau)}
+Driver instalado: ${ACTUAL:-ningún paquete propietario identificado}
 Driver recomendado: ${PAQUETE:-ninguno disponible en Debian para esta tarjeta}"
 
     ACCION=$(zenity --list --title="Drivers NVIDIA" --width=560 --height=420 \
@@ -91,7 +91,7 @@ Driver recomendado: ${PAQUETE:-ninguno disponible en Debian para esta tarjeta}"
         instalar)
             if [ -z "$PAQUETE" ]; then
                 zenity --warning --width=420 \
-                    --text="Debian no ofrece un driver propietario para esta tarjeta. Se seguirá usando nouveau." 2>/dev/null
+                    --text="Debian no ofrece un driver propietario para esta tarjeta. Consulta el inventario para ver qué controlador está activo." 2>/dev/null
                 return
             fi
             zenity --question --title="Driver NVIDIA propietario" --width=460 \
@@ -126,10 +126,14 @@ while true; do
     OPCION=$(zenity --list --title="Drivers y componentes" --width=440 --height=300 \
         --text="¿Qué quieres configurar?" --hide-header \
         --column="id" --column="Opción" --hide-column=1 \
+        detectar    "Ver hardware y controladores activos" \
         nvidia      "Tarjeta gráfica NVIDIA" \
         componentes "Otros drivers y firmware" 2>/dev/null) || exit 0
 
     case "$OPCION" in
+        detectar)
+            ruist-detect 2>&1 | zenity --text-info --title="Hardware de Ruist OS" \
+                --width=760 --height=550 --filename=/dev/stdin ;;
         nvidia)      menu_nvidia ;;
         componentes) menu_componentes ;;
     esac

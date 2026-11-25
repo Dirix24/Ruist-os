@@ -13,7 +13,8 @@ while true; do
         restaurar  "Puntos de restauración (Timeshift)" \
         limpiar    "Limpiar el sistema" \
         info       "Información del sistema" \
-        escritorio "Configuración del escritorio" \
+        sesiones   "Instalar o cambiar de escritorio" \
+        escritorio "Personalizar XFCE" \
         perfiles   "Perfiles de aplicaciones" \
         hardware   "Inventario de hardware" \
         kernel     "Kernel estable y recuperación" 2>/dev/null) || exit 0
@@ -51,6 +52,8 @@ EOF
 $INFORME
 EOF
             ;;
+        sesiones)
+            ruist-sessions ;;
         escritorio)
             ruist-desktop ;;
         perfiles)

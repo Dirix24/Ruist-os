@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Bienvenido a Ruist OS
+Exec=/usr/local/bin/ruist-welcome --first-login
+Icon=ruist-os
+NoDisplay=true

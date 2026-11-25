@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+marker="${XDG_CONFIG_HOME:-$HOME/.config}/ruist/welcome-seen"
+if [ "${1:-}" = "--first-login" ]; then
+    [ ! -e "$marker" ] || exit 0
+    mkdir -p "$(dirname "$marker")"
+    : > "$marker"
+fi
+
+choice=$(zenity --list --title="Bienvenido a Ruist OS" --width=560 --height=330 \
+    --window-icon=ruist-os --text="Configura tu equipo y el escritorio." \
+    --hide-header --column=ID --hide-column=1 --column=Acción \
+    drivers "Hardware y controladores" \
+    sessions "Instalar o cambiar de escritorio" \
+    store "Instalar aplicaciones" \
+    center "Abrir Ruist Center") || exit 0
+
+case "$choice" in
+    drivers) exec ruist-drivers ;;
+    sessions) exec ruist-sessions ;;
+    store) exec ruist-software ;;
+    center) exec ruist-center ;;
+esac

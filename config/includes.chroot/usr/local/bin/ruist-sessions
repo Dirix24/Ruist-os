@@ -1,0 +1,35 @@
+#!/bin/sh
+# Installation of alternate sessions uses the same manifests as Calamares.
+set -eu
+
+session_state() {
+    if [ -f "/usr/share/xsessions/$1.desktop" ]; then
+        printf 'Instalado'
+    else
+        printf 'Disponible con Internet'
+    fi
+}
+
+choice=$(zenity --list --title="Escritorios de Ruist OS" --width=600 --height=350 \
+    --text="Instala otro escritorio o consulta cómo elegirlo al iniciar sesión." \
+    --column=ID --hide-column=1 --column=Escritorio --column=Estado \
+    xfce "XFCE · ligero" "$(session_state xfce)" \
+    plasma "KDE Plasma · personalizable" "$(session_state plasmax11)" \
+    lxqt "LXQt · ligero" "$(session_state lxqt)") || exit 0
+
+case "$choice" in
+    xfce) session=xfce ;;
+    plasma) session=plasmax11 ;;
+    lxqt) session=lxqt ;;
+    *) exit 2 ;;
+esac
+
+if [ -f "/usr/share/xsessions/$session.desktop" ]; then
+    exec zenity --info --title="Cambiar de escritorio" --width=470 \
+        --text="Guarda tu trabajo y cierra sesión. En la pantalla de acceso, abre el selector de sesión, elige el escritorio e inicia sesión."
+fi
+
+[ "$choice" != xfce ] || exit 1
+zenity --question --title="Instalar escritorio" --width=480 \
+    --text="Se descargarán los paquetes de Debian. XFCE seguirá disponible. Al terminar, cierra sesión y elige el nuevo escritorio en la pantalla de acceso." || exit 0
+exec xfce4-terminal --hold --execute pkexec /usr/local/bin/ruist-profile install "desktop-$choice"

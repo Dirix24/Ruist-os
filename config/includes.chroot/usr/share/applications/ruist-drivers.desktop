@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Drivers y componentes
-Comment=Detecta e instala el driver de tu tarjeta NVIDIA, Wi-Fi y firmware
+Name=Controladores de Ruist OS
+Comment=Consulta el hardware y administra controladores y firmware
 Exec=/usr/local/bin/ruist-drivers
 Icon=video-display
 Terminal=false

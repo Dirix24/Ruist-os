@@ -59,7 +59,7 @@ def run_apt(action, packages):
     return status
 
 
-def prepare_steam_architecture():
+def prepare_steam_architecture(refresh=True):
     foreign = subprocess.run(["dpkg", "--print-foreign-architectures"], text=True, capture_output=True, check=False)
     if foreign.returncode != 0:
         print("No se pudieron consultar las arquitecturas de dpkg.", file=sys.stderr)
@@ -70,7 +70,7 @@ def prepare_steam_architecture():
     added = subprocess.run(["dpkg", "--add-architecture", "i386"], check=False)
     if added.returncode != 0:
         return added.returncode
-    return run_apt("update", [])
+    return run_apt("update", []) if refresh else 0
 
 
 def log_operation(message):
@@ -121,9 +121,11 @@ def install_profiles(names):
     prior = {name: read_state(name) for name in names}
     packages = sorted({package for manifest in manifests.values() for package in manifest})
     missing = [package for package in packages if not installed(package)]
-    if "steam-installer" in packages and prepare_steam_architecture() != 0:
-        return 1
     if missing:
+        if "steam-installer" in packages and prepare_steam_architecture(refresh=False) != 0:
+            return 1
+        if run_apt("update", []) != 0:
+            return 1
         print("APT mostrará los cambios y pedirá confirmación antes de instalar.")
         if run_apt("install", missing) != 0:
             return 1

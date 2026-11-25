@@ -6,7 +6,7 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 
 sys.dont_write_bytecode = True
@@ -63,7 +63,7 @@ class RuistProfileTests(unittest.TestCase):
         with patch.object(profile, "installed", side_effect=lambda pkg: pkg == "gamemode"), \
                 patch.object(profile, "run_apt", return_value=0) as apt:
             self.assertEqual(profile.install_profiles(["gaming"]), 0)
-        apt.assert_called_once_with("install", ["mangohud"])
+        self.assertEqual(apt.call_args_list, [call("update", []), call("install", ["mangohud"])])
         state = json.loads((self.state_dir / "gaming.json").read_text(encoding="utf-8"))
         self.assertEqual(state["active"], ["gamemode", "mangohud"])
         self.assertEqual(state["owned"], ["mangohud"])
